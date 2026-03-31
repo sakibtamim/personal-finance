@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDocs,
   onSnapshot,
   serverTimestamp,
   setDoc,
@@ -66,6 +67,32 @@ export function calculateNetContribution(monthly: MonthlyFlow): number {
   );
 }
 
+export function calculateSpendingBreakdown(
+  monthly: MonthlyFlow,
+  amount: number,
+): { fromCurrentMonth: number; fromSavings: number } {
+  const safeAmount = Number.isFinite(amount) ? Math.max(amount, 0) : 0;
+  const currentRemaining = Math.max(calculateRemaining(monthly), 0);
+  const fromCurrentMonth = Math.min(currentRemaining, safeAmount);
+
+  return {
+    fromCurrentMonth,
+    fromSavings: safeAmount - fromCurrentMonth,
+  };
+}
+
+export async function getTotalSavings(uid: string): Promise<number> {
+  const snapshot = await getDocs(monthlyCollection(uid));
+  let total = 0;
+
+  snapshot.docs.forEach((document) => {
+    const monthly = normalizeMonthlyFlow(document.data() as MonthlyFlowDoc);
+    total += calculateNetContribution(monthly);
+  });
+
+  return total;
+}
+
 export function subscribeToMonthlyFlow(
   uid: string,
   monthId: MonthId,
@@ -113,4 +140,32 @@ export async function upsertMonthlyFlow(
     },
     { merge: true },
   );
+}
+
+export async function applyExpenseWithSpendingRule(
+  uid: string,
+  monthId: MonthId,
+  currentMonthly: MonthlyFlow,
+  amount: number,
+): Promise<{ fromCurrentMonth: number; fromSavings: number }> {
+  const safeAmount = Number.isFinite(amount) ? Math.max(amount, 0) : 0;
+
+  if (safeAmount <= 0) {
+    throw new Error("Expense amount must be greater than zero.");
+  }
+
+  const totalSavings = await getTotalSavings(uid);
+
+  if (safeAmount > totalSavings) {
+    throw new Error("Not enough funds across current month and savings.");
+  }
+
+  const breakdown = calculateSpendingBreakdown(currentMonthly, safeAmount);
+
+  await upsertMonthlyFlow(uid, monthId, {
+    ...currentMonthly,
+    expense: currentMonthly.expense + safeAmount,
+  });
+
+  return breakdown;
 }

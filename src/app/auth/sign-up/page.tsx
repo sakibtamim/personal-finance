@@ -9,6 +9,7 @@ import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signUpWithEmail } from "@/lib/firebase/auth";
+import { getFirebaseAuthErrorMessage } from "@/lib/firebase/error-messages";
 import { useAuthStore } from "@/store/use-auth-store";
 
 export default function SignUpPage() {
@@ -29,8 +30,10 @@ export default function SignUpPage() {
       const user = await signUpWithEmail(email, password);
       setUser(user);
       router.push("/");
-    } catch {
-      setErrorMessage("Unable to create account.");
+    } catch (error) {
+      setErrorMessage(
+        getFirebaseAuthErrorMessage(error, "Unable to create account."),
+      );
     } finally {
       setIsPending(false);
     }

@@ -8,16 +8,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signOutUser } from "@/lib/firebase/auth";
 import {
+  applyExpenseWithSpendingRule,
   calculateRemaining,
+  calculateSpendingBreakdown,
   getCurrentMonthId,
   subscribeToMonthlyFlow,
   subscribeToTotalSavings,
   upsertMonthlyFlow,
 } from "@/lib/firebase/finance";
+import { upsertUserSettings } from "@/lib/firebase/settings";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/store/use-settings-store";
 import { useAuthStore } from "@/store/use-auth-store";
 import { DEFAULT_MONTHLY_FLOW } from "@/types/finance";
+import {
+  CURRENCY_OPTIONS,
+  THEME_OPTIONS,
+  type AppTheme,
+  type CurrencyCode,
+} from "@/types/settings";
 
 type FinanceFormState = {
   income: string;
@@ -38,11 +47,19 @@ function parseAmount(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function isNonNegativeNumber(value: string): boolean {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0;
+}
+
 export function HomeAuthPanel() {
   const user = useAuthStore((state) => state.user);
   const status = useAuthStore((state) => state.status);
   const clear = useAuthStore((state) => state.clear);
   const currency = useSettingsStore((state) => state.currency);
+  const theme = useSettingsStore((state) => state.theme);
+  const setCurrency = useSettingsStore((state) => state.setCurrency);
+  const setTheme = useSettingsStore((state) => state.setTheme);
 
   const [monthly, setMonthly] = useState(DEFAULT_MONTHLY_FLOW);
   const [totalSavings, setTotalSavings] = useState(0);
@@ -50,10 +67,46 @@ export function HomeAuthPanel() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [form, setForm] = useState<FinanceFormState>(defaultFormState);
+  const [quickExpenseAmount, setQuickExpenseAmount] = useState("0");
+  const [isApplyingExpense, setIsApplyingExpense] = useState(false);
 
   const monthId = useMemo(() => getCurrentMonthId(), []);
 
   const remaining = useMemo(() => calculateRemaining(monthly), [monthly]);
+
+  const spendPreview = useMemo(
+    () => calculateSpendingBreakdown(monthly, parseAmount(quickExpenseAmount)),
+    [monthly, quickExpenseAmount],
+  );
+
+  const isMonthlyFormValid = useMemo(
+    () =>
+      [form.income, form.expense, form.manualSaved, form.manualWithdrawn].every(
+        isNonNegativeNumber,
+      ),
+    [form.expense, form.income, form.manualSaved, form.manualWithdrawn],
+  );
+
+  const isQuickExpenseValid = useMemo(
+    () =>
+      isNonNegativeNumber(quickExpenseAmount) &&
+      parseAmount(quickExpenseAmount) > 0,
+    [quickExpenseAmount],
+  );
+
+  const hasAnyFinanceData = useMemo(
+    () =>
+      monthly.income > 0 ||
+      monthly.expense > 0 ||
+      monthly.manualSaved > 0 ||
+      monthly.manualWithdrawn > 0,
+    [
+      monthly.expense,
+      monthly.income,
+      monthly.manualSaved,
+      monthly.manualWithdrawn,
+    ],
+  );
 
   const currencyFormatter = useMemo(
     () =>
@@ -110,6 +163,11 @@ export function HomeAuthPanel() {
       return;
     }
 
+    if (!isMonthlyFormValid) {
+      setErrorMessage("Use valid non-negative amounts for all monthly fields.");
+      return;
+    }
+
     setErrorMessage(null);
     setSuccessMessage(null);
     setIsSaving(true);
@@ -126,6 +184,71 @@ export function HomeAuthPanel() {
       setErrorMessage("Unable to save monthly finance data.");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleApplyQuickExpense() {
+    if (!user) {
+      return;
+    }
+
+    const amount = parseAmount(quickExpenseAmount);
+    if (!isQuickExpenseValid) {
+      setErrorMessage("Expense amount must be greater than zero.");
+      return;
+    }
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsApplyingExpense(true);
+
+    try {
+      const breakdown = await applyExpenseWithSpendingRule(
+        user.uid,
+        monthId,
+        monthly,
+        amount,
+      );
+      setSuccessMessage(
+        `Expense applied. Current month: ${currencyFormatter.format(breakdown.fromCurrentMonth)}, savings: ${currencyFormatter.format(breakdown.fromSavings)}.`,
+      );
+      setQuickExpenseAmount("0");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to apply expense by spending rule.");
+      }
+    } finally {
+      setIsApplyingExpense(false);
+    }
+  }
+
+  async function handleCurrencyChange(nextCurrency: CurrencyCode) {
+    setCurrency(nextCurrency);
+
+    if (!user) {
+      return;
+    }
+
+    try {
+      await upsertUserSettings(user.uid, { currency: nextCurrency });
+    } catch {
+      setErrorMessage("Unable to update currency setting.");
+    }
+  }
+
+  async function handleThemeChange(nextTheme: AppTheme) {
+    setTheme(nextTheme);
+
+    if (!user) {
+      return;
+    }
+
+    try {
+      await upsertUserSettings(user.uid, { theme: nextTheme });
+    } catch {
+      setErrorMessage("Unable to update theme setting.");
     }
   }
 
@@ -206,6 +329,49 @@ export function HomeAuthPanel() {
           </div>
         </div>
 
+        {!hasAnyFinanceData ? (
+          <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+            No monthly data yet. Enter your values and save to start tracking.
+          </p>
+        ) : null}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="currency">Currency</Label>
+            <select
+              id="currency"
+              className="flex h-8 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              value={currency}
+              onChange={(event) =>
+                handleCurrencyChange(event.target.value as CurrencyCode)
+              }
+            >
+              {CURRENCY_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="theme">Theme</Label>
+            <select
+              id="theme"
+              className="flex h-8 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              value={theme}
+              onChange={(event) =>
+                handleThemeChange(event.target.value as AppTheme)
+              }
+            >
+              {THEME_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="income">Income</Label>
@@ -265,6 +431,43 @@ export function HomeAuthPanel() {
           </div>
         </div>
 
+        <div className="space-y-3 rounded-xl border p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Spending Rule
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Expense uses current month remaining first, then savings.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="quickExpense">Expense amount</Label>
+              <Input
+                id="quickExpense"
+                inputMode="decimal"
+                value={quickExpenseAmount}
+                onChange={(event) => setQuickExpenseAmount(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Preview breakdown</p>
+              <p className="text-sm">
+                From current month:{" "}
+                {currencyFormatter.format(spendPreview.fromCurrentMonth)}
+              </p>
+              <p className="text-sm">
+                From savings:{" "}
+                {currencyFormatter.format(spendPreview.fromSavings)}
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={handleApplyQuickExpense}
+            disabled={isApplyingExpense || !isQuickExpenseValid}
+          >
+            {isApplyingExpense ? "Applying..." : "Apply expense by rule"}
+          </Button>
+        </div>
+
         {errorMessage ? (
           <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {errorMessage}
@@ -278,7 +481,10 @@ export function HomeAuthPanel() {
         ) : null}
 
         <div className="flex flex-wrap gap-3">
-          <Button onClick={handleSaveFinance} disabled={isSaving}>
+          <Button
+            onClick={handleSaveFinance}
+            disabled={isSaving || !isMonthlyFormValid}
+          >
             {isSaving ? "Saving..." : "Save monthly values"}
           </Button>
           <Button variant="destructive" onClick={handleSignOut}>

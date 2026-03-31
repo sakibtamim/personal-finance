@@ -7,6 +7,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getFirebaseAuthErrorMessage } from "@/lib/firebase/error-messages";
 import { resetPassword } from "@/lib/firebase/auth";
 
 export default function ResetPasswordPage() {
@@ -24,8 +25,13 @@ export default function ResetPasswordPage() {
     try {
       await resetPassword(email);
       setSuccessMessage("Password reset email sent.");
-    } catch {
-      setErrorMessage("Unable to send password reset email.");
+    } catch (error) {
+      setErrorMessage(
+        getFirebaseAuthErrorMessage(
+          error,
+          "Unable to send password reset email.",
+        ),
+      );
     } finally {
       setIsPending(false);
     }

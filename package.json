@@ -6,7 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "predeploy:check": "pnpm lint && pnpm test:run && pnpm build",
+    "firebase:login": "pnpm dlx firebase-tools login",
+    "firebase:use": "pnpm dlx firebase-tools use personal-finance-17ca1",
+    "firestore:deploy": "pnpm dlx firebase-tools deploy --only firestore:rules,firestore:indexes",
+    "deploy:vercel": "pnpm dlx vercel --prod"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
@@ -27,11 +35,13 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
     "turbo": "^2.9.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.2"
   },
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
 }

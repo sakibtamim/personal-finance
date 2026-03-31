@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signInWithEmail, signInWithGoogle } from "@/lib/firebase/auth";
+import { getFirebaseAuthErrorMessage } from "@/lib/firebase/error-messages";
 import { useAuthStore } from "@/store/use-auth-store";
 
 export default function SignInPage() {
@@ -32,8 +33,13 @@ export default function SignInPage() {
       const user = await signInWithEmail(email, password);
       setUser(user);
       router.push("/");
-    } catch {
-      setErrorMessage("Unable to sign in with email/password.");
+    } catch (error) {
+      setErrorMessage(
+        getFirebaseAuthErrorMessage(
+          error,
+          "Unable to sign in with email/password.",
+        ),
+      );
     } finally {
       setIsPending(false);
     }
@@ -47,8 +53,10 @@ export default function SignInPage() {
       const user = await signInWithGoogle();
       setUser(user);
       router.push("/");
-    } catch {
-      setErrorMessage("Unable to sign in with Google.");
+    } catch (error) {
+      setErrorMessage(
+        getFirebaseAuthErrorMessage(error, "Unable to sign in with Google."),
+      );
     } finally {
       setIsGooglePending(false);
     }

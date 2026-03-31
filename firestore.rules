@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isAllowedCurrency(value) {
+      return value in ["BDT", "USD", "EUR"];
+    }
+
+    function isAllowedTheme(value) {
+      return value in ["light", "dark"];
+    }
+
+    function isValidMoney(value) {
+      return value is number && value >= 0;
+    }
+
+    function hasOnlyFields(data, allowed) {
+      return data.keys().hasOnly(allowed);
+    }
+
+    match /users/{uid} {
+      allow read, write: if false;
+
+      match /monthlyFlows/{monthId} {
+        allow read: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && hasOnlyFields(request.resource.data, [
+            "income",
+            "expense",
+            "manualSaved",
+            "manualWithdrawn",
+            "updatedAt"
+          ])
+          && isValidMoney(request.resource.data.income)
+          && isValidMoney(request.resource.data.expense)
+          && isValidMoney(request.resource.data.manualSaved)
+          && isValidMoney(request.resource.data.manualWithdrawn);
+        allow delete: if isOwner(uid);
+      }
+
+      match /settings/{docId} {
+        allow read: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && docId == "preferences"
+          && hasOnlyFields(request.resource.data, ["currency", "theme", "updatedAt"])
+          && isAllowedCurrency(request.resource.data.currency)
+          && isAllowedTheme(request.resource.data.theme);
+        allow delete: if isOwner(uid);
+      }
+    }
+  }
+}
