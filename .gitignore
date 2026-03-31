@@ -67,3 +67,6 @@ Desktop.ini
 # keys and certificates
 *.pem
 *.key
+
+# Turborepo
+.turbo

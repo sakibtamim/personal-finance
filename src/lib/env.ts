@@ -1,35 +1,54 @@
-const requiredClientEnvKeys = [
-  "NEXT_PUBLIC_FIREBASE_API_KEY",
-  "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
-  "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
-  "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
-  "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-  "NEXT_PUBLIC_FIREBASE_APP_ID",
-] as const;
+export function getFirebaseClientEnv() {
+  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  const authDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+  const messagingSenderId =
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID;
+  const appId = process.env.NEXT_PUBLIC_FIREBASE_APP_ID;
 
-function readRequiredEnv(key: (typeof requiredClientEnvKeys)[number]): string {
-  const value = process.env[key];
-
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
+  if (!apiKey) {
+    throw new Error(
+      "Missing required environment variable: NEXT_PUBLIC_FIREBASE_API_KEY",
+    );
   }
 
-  return value;
-}
+  if (!authDomain) {
+    throw new Error(
+      "Missing required environment variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+    );
+  }
 
-export function getFirebaseClientEnv() {
-  requiredClientEnvKeys.forEach((key) => {
-    readRequiredEnv(key);
-  });
+  if (!projectId) {
+    throw new Error(
+      "Missing required environment variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+    );
+  }
+
+  if (!storageBucket) {
+    throw new Error(
+      "Missing required environment variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
+    );
+  }
+
+  if (!messagingSenderId) {
+    throw new Error(
+      "Missing required environment variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+    );
+  }
+
+  if (!appId) {
+    throw new Error(
+      "Missing required environment variable: NEXT_PUBLIC_FIREBASE_APP_ID",
+    );
+  }
 
   return {
-    apiKey: readRequiredEnv("NEXT_PUBLIC_FIREBASE_API_KEY"),
-    authDomain: readRequiredEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"),
-    projectId: readRequiredEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID"),
-    storageBucket: readRequiredEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"),
-    messagingSenderId: readRequiredEnv(
-      "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-    ),
-    appId: readRequiredEnv("NEXT_PUBLIC_FIREBASE_APP_ID"),
+    apiKey,
+    authDomain,
+    projectId,
+    storageBucket,
+    messagingSenderId,
+    appId,
   };
 }

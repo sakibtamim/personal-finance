@@ -51,6 +51,21 @@ Implemented auth pages and form flows:
 
 The homepage now displays live auth state and quick navigation actions.
 
+## Firestore Monthly Flow (Step 6)
+
+Implemented real-time finance module for authenticated users:
+
+- Monthly fields: `income`, `expense`, `manualSaved`, `manualWithdrawn`
+- Remaining formula: `income - expense`
+- Total savings formula: sum of all months as
+  `(income - expense + manualSaved - manualWithdrawn)`
+
+Key files:
+
+- `src/lib/firebase/finance.ts`
+- `src/types/finance.ts`
+- `src/components/auth/home-auth-panel.tsx`
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
