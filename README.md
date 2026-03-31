@@ -41,6 +41,16 @@ Key files:
 - `src/store/use-auth-store.ts`
 - `src/components/providers/auth-provider.tsx`
 
+## Auth UI (Step 5)
+
+Implemented auth pages and form flows:
+
+- `/auth/sign-in` (email/password + Google)
+- `/auth/sign-up` (email/password)
+- `/auth/reset-password` (email reset link)
+
+The homepage now displays live auth state and quick navigation actions.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

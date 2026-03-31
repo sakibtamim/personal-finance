@@ -9,7 +9,7 @@ import {
   signOut,
 } from "firebase/auth";
 
-import { auth } from "@/lib/firebase/client";
+import { getFirebaseAuth } from "@/lib/firebase/client";
 import type { AuthUser } from "@/types/auth";
 
 const googleProvider = new GoogleAuthProvider();
@@ -26,12 +26,15 @@ export function mapFirebaseUser(user: User): AuthUser {
 export function subscribeToAuthState(
   callback: (user: AuthUser | null) => void,
 ): () => void {
+  const auth = getFirebaseAuth();
+
   return onAuthStateChanged(auth, (user) => {
     callback(user ? mapFirebaseUser(user) : null);
   });
 }
 
 export async function signInWithGoogle(): Promise<AuthUser> {
+  const auth = getFirebaseAuth();
   const result = await signInWithPopup(auth, googleProvider);
   return mapFirebaseUser(result.user);
 }
@@ -40,6 +43,7 @@ export async function signInWithEmail(
   email: string,
   password: string,
 ): Promise<AuthUser> {
+  const auth = getFirebaseAuth();
   const result = await signInWithEmailAndPassword(auth, email, password);
   return mapFirebaseUser(result.user);
 }
@@ -48,14 +52,17 @@ export async function signUpWithEmail(
   email: string,
   password: string,
 ): Promise<AuthUser> {
+  const auth = getFirebaseAuth();
   const result = await createUserWithEmailAndPassword(auth, email, password);
   return mapFirebaseUser(result.user);
 }
 
 export async function resetPassword(email: string): Promise<void> {
+  const auth = getFirebaseAuth();
   await sendPasswordResetEmail(auth, email);
 }
 
 export async function signOutUser(): Promise<void> {
+  const auth = getFirebaseAuth();
   await signOut(auth);
 }
