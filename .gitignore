@@ -1,0 +1,69 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# package manager caches
+.pnpm-store/
+.npm/
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js build output
+.next/
+out/
+build/
+
+# test output
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+pnpm-debug.log*
+
+# deployment
+.vercel/
+
+# Firebase local/emulator artifacts
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# tooling caches
+.eslintcache
+.cache/
+
+# IDE / editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# keys and certificates
+*.pem
+*.key
