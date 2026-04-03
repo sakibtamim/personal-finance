@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Landmark, LogOut, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 
@@ -15,6 +15,7 @@ import type { AppTheme } from "@/types/settings";
 import { cn } from "@/lib/utils";
 
 export function DashboardSidebar() {
+  const router = useRouter();
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
   const clear = useAuthStore((state) => state.clear);
@@ -63,6 +64,7 @@ export function DashboardSidebar() {
     try {
       await signOutUser();
       clear();
+      router.replace("/auth/sign-in");
     } finally {
       setIsSigningOut(false);
     }

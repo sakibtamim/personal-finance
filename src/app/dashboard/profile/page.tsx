@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { DashboardAuthGate } from "@/components/dashboard/dashboard-auth-gate";
 import { DashboardSection } from "@/components/layout/dashboard-section";
@@ -19,6 +20,7 @@ function getAccountType(email: string | null): string {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const clear = useAuthStore((state) => state.clear);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -29,6 +31,7 @@ export default function ProfilePage() {
     try {
       await signOutUser();
       clear();
+      router.replace("/auth/sign-in");
     } finally {
       setIsSigningOut(false);
     }
