@@ -40,6 +40,8 @@ export default function MonthlyFlowPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [newExpenseAmount, setNewExpenseAmount] = useState("0");
   const [newExpenseDescription, setNewExpenseDescription] = useState("");
+  const [newWithdrawAmount, setNewWithdrawAmount] = useState("0");
+  const [newWithdrawDescription, setNewWithdrawDescription] = useState("");
   const [form, setForm] = useState<MonthForm>({
     income: "0",
     expense: "0",
@@ -93,6 +95,11 @@ export default function MonthlyFlowPage() {
     newExpenseDescription.trim().length > 0 &&
     !isSaving;
 
+  const canAddWithdrawEntry =
+    parseNonNegativeAmount(newWithdrawAmount) > 0 &&
+    newWithdrawDescription.trim().length > 0 &&
+    !isSaving;
+
   async function handleSave() {
     if (!isFormValid) {
       setErrorMessage("Use valid non-negative numbers for all month fields.");
@@ -110,6 +117,7 @@ export default function MonthlyFlowPage() {
         manualSaved: parseNonNegativeAmount(form.manualSaved),
         manualWithdrawn: parseNonNegativeAmount(form.manualWithdrawn),
         expenseItems: selectedMonthly.expenseItems ?? [],
+        withdrawItems: selectedMonthly.withdrawItems ?? [],
       });
       setSuccessMessage("Monthly flow saved.");
     } catch (error) {
@@ -147,6 +155,7 @@ export default function MonthlyFlowPage() {
         manualSaved: 0,
         manualWithdrawn: 0,
         expenseItems: [],
+        withdrawItems: [],
       });
       setSuccessMessage("Month data cleared.");
     } catch (error) {
@@ -194,6 +203,7 @@ export default function MonthlyFlowPage() {
             amount,
           },
         ],
+        withdrawItems: selectedMonthly.withdrawItems ?? [],
       });
 
       setForm((previous) => ({
@@ -208,6 +218,61 @@ export default function MonthlyFlowPage() {
         setErrorMessage(error.message);
       } else {
         setErrorMessage("Unable to add expense entry.");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleAddWithdrawEntry() {
+    const amount = parseNonNegativeAmount(newWithdrawAmount);
+    const description = newWithdrawDescription.trim();
+
+    if (amount <= 0) {
+      setErrorMessage("Enter a withdraw amount greater than zero.");
+      return;
+    }
+
+    if (!description) {
+      setErrorMessage("Enter a short reason for this withdraw.");
+      return;
+    }
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSaving(true);
+
+    const currentWithdrawn = parseNonNegativeAmount(form.manualWithdrawn);
+
+    try {
+      await saveSelectedMonth({
+        income: parseNonNegativeAmount(form.income),
+        expense: parseNonNegativeAmount(form.expense),
+        manualSaved: parseNonNegativeAmount(form.manualSaved),
+        manualWithdrawn: currentWithdrawn + amount,
+        expenseItems: selectedMonthly.expenseItems ?? [],
+        withdrawItems: [
+          ...(selectedMonthly.withdrawItems ?? []),
+          {
+            id: `withdraw-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            description,
+            amount,
+          },
+        ],
+      });
+
+      setForm((previous) => ({
+        ...previous,
+        manualWithdrawn: String(currentWithdrawn + amount),
+      }));
+      setNewWithdrawAmount("0");
+      setNewWithdrawDescription("");
+      setSuccessMessage("Withdraw entry added.");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to add withdraw entry.");
       }
     } finally {
       setIsSaving(false);
@@ -296,108 +361,111 @@ export default function MonthlyFlowPage() {
         </div>
 
         <Card className="rounded-xl border border-border/50 bg-card shadow-sm">
-          <CardContent className="space-y-4 p-5">
-            <p className="text-base font-semibold text-foreground">
-              Manual month adjustments
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Edit totals directly, or add expense entries with reason below.
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="monthly-income-input"
-                  className="text-xs text-muted-foreground"
-                >
-                  Income
-                </Label>
-                <Input
-                  id="monthly-income-input"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
-                  value={form.income}
-                  onChange={(event) =>
-                    setForm((previous) => ({
-                      ...previous,
-                      income: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="monthly-expense-input"
-                  className="text-xs text-muted-foreground"
-                >
-                  Expense total
-                </Label>
-                <Input
-                  id="monthly-expense-input"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
-                  value={form.expense}
-                  onChange={(event) =>
-                    setForm((previous) => ({
-                      ...previous,
-                      expense: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="monthly-save-input"
-                  className="text-xs text-muted-foreground"
-                >
-                  Manual save
-                </Label>
-                <Input
-                  id="monthly-save-input"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
-                  value={form.manualSaved}
-                  onChange={(event) =>
-                    setForm((previous) => ({
-                      ...previous,
-                      manualSaved: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="monthly-withdraw-input"
-                  className="text-xs text-muted-foreground"
-                >
-                  Manual withdraw
-                </Label>
-                <Input
-                  id="monthly-withdraw-input"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
-                  value={form.manualWithdrawn}
-                  onChange={(event) =>
-                    setForm((previous) => ({
-                      ...previous,
-                      manualWithdrawn: event.target.value,
-                    }))
-                  }
-                />
+          <CardContent className="space-y-5 p-5 md:p-6">
+            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                Manual month adjustments
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Edit totals directly, or add expense and withdraw entries below.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="monthly-income-input"
+                    className="text-sm text-muted-foreground"
+                  >
+                    Income
+                  </Label>
+                  <Input
+                    id="monthly-income-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={form.income}
+                    onChange={(event) =>
+                      setForm((previous) => ({
+                        ...previous,
+                        income: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="monthly-expense-input"
+                    className="text-sm text-muted-foreground"
+                  >
+                    Expense total
+                  </Label>
+                  <Input
+                    id="monthly-expense-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={form.expense}
+                    onChange={(event) =>
+                      setForm((previous) => ({
+                        ...previous,
+                        expense: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="monthly-save-input"
+                    className="text-sm text-muted-foreground"
+                  >
+                    Manual save
+                  </Label>
+                  <Input
+                    id="monthly-save-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={form.manualSaved}
+                    onChange={(event) =>
+                      setForm((previous) => ({
+                        ...previous,
+                        manualSaved: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="monthly-withdraw-input"
+                    className="text-sm text-muted-foreground"
+                  >
+                    Manual withdraw
+                  </Label>
+                  <Input
+                    id="monthly-withdraw-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={form.manualWithdrawn}
+                    onChange={(event) =>
+                      setForm((previous) => ({
+                        ...previous,
+                        manualWithdrawn: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
               </div>
             </div>
+
             <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
               <p className="text-sm font-semibold text-foreground">
                 Add expense entry
               </p>
-              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto]">
+              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
                 <Input
                   id="monthly-expense-entry-amount-input"
                   type="number"
@@ -427,6 +495,42 @@ export default function MonthlyFlowPage() {
                 </Button>
               </div>
             </div>
+
+            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                Add withdraw entry
+              </p>
+              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
+                <Input
+                  id="monthly-withdraw-entry-amount-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  placeholder="Amount"
+                  value={newWithdrawAmount}
+                  onChange={(event) => setNewWithdrawAmount(event.target.value)}
+                />
+                <Input
+                  id="monthly-withdraw-entry-reason-input"
+                  placeholder="Reason (for example: Family support, Emergency, Transfer)"
+                  value={newWithdrawDescription}
+                  onChange={(event) =>
+                    setNewWithdrawDescription(event.target.value)
+                  }
+                />
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="rounded-xl md:min-w-32"
+                  onClick={handleAddWithdrawEntry}
+                  disabled={!canAddWithdrawEntry}
+                >
+                  {isSaving ? "Adding..." : "Add withdraw"}
+                </Button>
+              </div>
+            </div>
+
             <div className="flex flex-wrap justify-end gap-2 border-t border-border/50 pt-2">
               <Button
                 size="lg"
@@ -469,7 +573,7 @@ export default function MonthlyFlowPage() {
                   {selectedMonthly.expenseItems.map((item) => (
                     <li
                       key={item.id}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-card px-3 py-2"
+                      className="flex items-center justify-between gap-3 rounded-lg border border-rose-500/20 bg-rose-500/8 px-3 py-2"
                     >
                       <span className="text-foreground">
                         {item.description}
@@ -483,6 +587,34 @@ export default function MonthlyFlowPage() {
               ) : (
                 <p className="text-sm text-muted-foreground">
                   No expense entries in this month yet.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2 rounded-xl border border-border/50 bg-background/70 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                Withdraw entries ({selectedMonthly.withdrawItems?.length ?? 0})
+              </p>
+              {selectedMonthly.withdrawItems &&
+              selectedMonthly.withdrawItems.length > 0 ? (
+                <ul className="space-y-1.5 text-sm">
+                  {selectedMonthly.withdrawItems.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2"
+                    >
+                      <span className="text-foreground">
+                        {item.description}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {currencyFormatter.format(item.amount)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No withdraw entries in this month yet.
                 </p>
               )}
             </div>

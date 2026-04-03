@@ -9,7 +9,6 @@ import { useDashboardFinance } from "@/components/providers/dashboard-finance-pr
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   isPositiveAmount,
   parseNonNegativeAmount,
@@ -32,6 +31,8 @@ export default function CurrentMonthPage() {
   const [incomeAmount, setIncomeAmount] = useState("0");
   const [expenseAmount, setExpenseAmount] = useState("0");
   const [expenseDescription, setExpenseDescription] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("0");
+  const [withdrawDescription, setWithdrawDescription] = useState("");
   const [pendingAction, setPendingAction] = useState<ActionType | null>(null);
   const [optimisticIncome, setOptimisticIncome] = useState(0);
   const [optimisticExpense, setOptimisticExpense] = useState(0);
@@ -39,6 +40,13 @@ export default function CurrentMonthPage() {
   const [optimisticWithdrawn, setOptimisticWithdrawn] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const canResetForm =
+    incomeAmount !== "0" ||
+    expenseAmount !== "0" ||
+    expenseDescription !== "" ||
+    withdrawAmount !== "0" ||
+    withdrawDescription !== "";
 
   const optimisticMonthly = useMemo(
     () => ({
@@ -71,6 +79,8 @@ export default function CurrentMonthPage() {
     isPositiveAmount(incomeAmount) && pendingAction === null;
   const canSubmitExpense =
     isPositiveAmount(expenseAmount) && pendingAction === null;
+  const canSubmitWithdraw =
+    isPositiveAmount(withdrawAmount) && pendingAction === null;
 
   const currencyFormatter = useMemo(
     () =>
@@ -88,15 +98,28 @@ export default function CurrentMonthPage() {
     const trimmedExpenseDescription = expenseDescription.trim();
 
     const amountValue =
-      action === "income" || action === "save" ? incomeAmount : expenseAmount;
+      action === "income"
+        ? incomeAmount
+        : action === "save"
+          ? incomeAmount
+          : action === "withdraw"
+            ? withdrawAmount
+            : expenseAmount;
 
     if (!isPositiveAmount(amountValue)) {
       setErrorMessage("Enter an amount greater than zero.");
       return;
     }
 
+    const trimmedWithdrawDescription = withdrawDescription.trim();
+
     if (action === "expense" && !trimmedExpenseDescription) {
       setErrorMessage("Enter a short reason for this expense.");
+      return;
+    }
+
+    if (action === "withdraw" && !trimmedWithdrawDescription) {
+      setErrorMessage("Enter a short reason for this withdraw.");
       return;
     }
 
@@ -137,9 +160,10 @@ export default function CurrentMonthPage() {
       }
 
       if (action === "withdraw") {
-        await addWithdrawCurrent(amount);
+        await addWithdrawCurrent(amount, trimmedWithdrawDescription);
         setSuccessMessage("Amount withdrawn from savings.");
-        setExpenseAmount("0");
+        setWithdrawAmount("0");
+        setWithdrawDescription("");
       }
     } catch (error) {
       setOptimisticIncome(0);
@@ -159,6 +183,16 @@ export default function CurrentMonthPage() {
       setOptimisticSaved(0);
       setOptimisticWithdrawn(0);
     }
+  }
+
+  function handleResetForm() {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIncomeAmount("0");
+    setExpenseAmount("0");
+    setExpenseDescription("");
+    setWithdrawAmount("0");
+    setWithdrawDescription("");
   }
 
   return (
@@ -196,80 +230,118 @@ export default function CurrentMonthPage() {
           </div>
         ) : null}
 
-        <Card className="rounded-2xl border-border/50 bg-card shadow-sm">
-          <div className="space-y-4 p-5 md:p-6">
-            <p className="text-sm font-semibold text-foreground">
-              Quick actions
-            </p>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2" id="quick-income-section">
-                <Label
-                  htmlFor="quick-income-input"
-                  className="text-sm text-muted-foreground"
-                >
-                  Add income
-                </Label>
+        <Card className="rounded-xl border border-border/50 bg-card shadow-sm">
+          <div className="space-y-5 p-5 md:p-6">
+            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                Add income
+              </p>
+              <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
                 <Input
                   id="quick-income-input"
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="0.00"
+                  placeholder="Amount"
                   inputMode="decimal"
                   value={incomeAmount}
                   onChange={(event) => setIncomeAmount(event.target.value)}
                 />
-              </div>
-              <div className="space-y-2" id="quick-expense-section">
-                <Label
-                  htmlFor="quick-expense-input"
-                  className="text-sm text-muted-foreground"
+                <Button
+                  size="lg"
+                  className="rounded-xl md:min-w-32"
+                  onClick={() => handleAction("income")}
+                  disabled={!canSubmitIncome}
                 >
-                  Add expense
-                </Label>
+                  {pendingAction === "income" ? "Adding..." : "Add income"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                Add expense entry
+              </p>
+              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
                 <Input
                   id="quick-expense-input"
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="0.00"
+                  placeholder="Amount"
                   inputMode="decimal"
                   value={expenseAmount}
                   onChange={(event) => setExpenseAmount(event.target.value)}
                 />
                 <Input
                   id="quick-expense-description-input"
-                  placeholder="Reason (for example: Bus fare, Snacks, Dinner)"
+                  placeholder="Reason (for example: Bus fare, Dinner, Snacks)"
                   value={expenseDescription}
                   onChange={(event) =>
                     setExpenseDescription(event.target.value)
                   }
                 />
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="rounded-xl md:min-w-32"
+                  onClick={() => handleAction("expense")}
+                  disabled={
+                    !canSubmitExpense || expenseDescription.trim().length === 0
+                  }
+                >
+                  {pendingAction === "expense" ? "Adding..." : "Add expense"}
+                </Button>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                Add withdraw entry
+              </p>
+              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
+                <Input
+                  id="quick-withdraw-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Amount"
+                  inputMode="decimal"
+                  value={withdrawAmount}
+                  onChange={(event) => setWithdrawAmount(event.target.value)}
+                />
+                <Input
+                  id="quick-withdraw-description-input"
+                  placeholder="Reason (for example: Family support, Emergency, Transfer)"
+                  value={withdrawDescription}
+                  onChange={(event) =>
+                    setWithdrawDescription(event.target.value)
+                  }
+                />
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="rounded-xl md:min-w-32"
+                  onClick={() => handleAction("withdraw")}
+                  disabled={
+                    !canSubmitWithdraw ||
+                    withdrawDescription.trim().length === 0
+                  }
+                >
+                  {pendingAction === "withdraw" ? "Adding..." : "Add withdraw"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-end gap-2 border-t border-border/50 pt-2">
               <Button
                 size="lg"
+                variant="outline"
                 className="rounded-xl"
-                onClick={() => handleAction("income")}
-                disabled={!canSubmitIncome}
+                onClick={handleResetForm}
+                disabled={!canResetForm || pendingAction !== null}
               >
-                {pendingAction === "income" ? "Adding income..." : "Add income"}
-              </Button>
-              <Button
-                size="lg"
-                variant="secondary"
-                className="rounded-xl"
-                onClick={() => handleAction("expense")}
-                disabled={
-                  !canSubmitExpense || expenseDescription.trim().length === 0
-                }
-              >
-                {pendingAction === "expense"
-                  ? "Adding expense..."
-                  : "Add expense"}
+                Reset
               </Button>
               <Button
                 size="lg"
@@ -279,15 +351,6 @@ export default function CurrentMonthPage() {
                 disabled={!canSubmitIncome}
               >
                 {pendingAction === "save" ? "Saving..." : "Save"}
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="rounded-xl"
-                onClick={() => handleAction("withdraw")}
-                disabled={!canSubmitExpense}
-              >
-                {pendingAction === "withdraw" ? "Withdrawing..." : "Withdraw"}
               </Button>
             </div>
 
@@ -303,33 +366,62 @@ export default function CurrentMonthPage() {
               </p>
             ) : null}
 
-            <div className="space-y-2 rounded-xl border border-border/50 bg-background/70 p-4">
-              <p className="text-sm font-semibold text-foreground">
-                Expense entries ({currentMonthly.expenseItems?.length ?? 0})
-              </p>
-              {currentMonthly.expenseItems &&
-              currentMonthly.expenseItems.length > 0 ? (
-                <ul className="space-y-1.5 text-sm">
-                  {currentMonthly.expenseItems.map((item) => (
-                    <li
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-card px-3 py-2"
-                    >
-                      <span className="text-foreground">
-                        {item.description}
-                      </span>
-                      <span className="font-medium text-foreground">
-                        {currencyFormatter.format(item.amount)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No expense entries yet. Add your first one with an amount and
-                  reason.
+            <div className="space-y-4 rounded-xl border border-border/50 bg-background/70 p-4">
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-foreground">
+                  Expense entries ({currentMonthly.expenseItems?.length ?? 0})
                 </p>
-              )}
+                {currentMonthly.expenseItems &&
+                currentMonthly.expenseItems.length > 0 ? (
+                  <ul className="space-y-1.5 text-sm">
+                    {currentMonthly.expenseItems.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-rose-500/20 bg-rose-500/8 px-3 py-2"
+                      >
+                        <span className="text-foreground">
+                          {item.description}
+                        </span>
+                        <span className="font-medium text-foreground">
+                          {currencyFormatter.format(item.amount)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No expense entries yet.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2 border-t border-border/50 pt-4">
+                <p className="text-sm font-semibold text-foreground">
+                  Withdraw entries ({currentMonthly.withdrawItems?.length ?? 0})
+                </p>
+                {currentMonthly.withdrawItems &&
+                currentMonthly.withdrawItems.length > 0 ? (
+                  <ul className="space-y-1.5 text-sm">
+                    {currentMonthly.withdrawItems.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2"
+                      >
+                        <span className="text-foreground">
+                          {item.description}
+                        </span>
+                        <span className="font-medium text-foreground">
+                          {currencyFormatter.format(item.amount)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No withdraw entries yet.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </Card>

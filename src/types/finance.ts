@@ -6,12 +6,19 @@ export type ExpenseItem = {
   amount: number;
 };
 
+export type WithdrawItem = {
+  id: string;
+  description: string;
+  amount: number;
+};
+
 export type MonthlyFlow = {
   income: number;
   expense: number;
   manualSaved: number;
   manualWithdrawn: number;
   expenseItems?: ExpenseItem[];
+  withdrawItems?: WithdrawItem[];
 };
 
 export type FinanceSnapshot = {
@@ -27,4 +34,5 @@ export const DEFAULT_MONTHLY_FLOW: MonthlyFlow = {
   manualSaved: 0,
   manualWithdrawn: 0,
   expenseItems: [],
+  withdrawItems: [],
 };

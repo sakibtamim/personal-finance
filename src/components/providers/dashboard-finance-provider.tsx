@@ -12,6 +12,7 @@ import {
 
 import {
   applyExpenseWithSpendingRule,
+  applyWithdrawWithSavingsRule,
   calculateNetContribution,
   calculateRemaining,
   getCurrentMonthId,
@@ -49,7 +50,7 @@ type DashboardFinanceContextValue = {
   addIncomeCurrent: (amount: number) => Promise<void>;
   addExpenseCurrent: (amount: number, description: string) => Promise<void>;
   addSavedCurrent: (amount: number) => Promise<void>;
-  addWithdrawCurrent: (amount: number) => Promise<void>;
+  addWithdrawCurrent: (amount: number, description: string) => Promise<void>;
 };
 
 const DashboardFinanceContext =
@@ -153,6 +154,18 @@ export function DashboardFinanceProvider({
               item.description.length > 0 &&
               item.amount > 0,
           ),
+        withdrawItems: (values.withdrawItems ?? [])
+          .map((item) => ({
+            id: item.id,
+            description: item.description.trim(),
+            amount: clampAmount(item.amount),
+          }))
+          .filter(
+            (item) =>
+              item.id.length > 0 &&
+              item.description.length > 0 &&
+              item.amount > 0,
+          ),
       });
     },
     [selectedMonthId, user],
@@ -219,7 +232,7 @@ export function DashboardFinanceProvider({
   );
 
   const addWithdrawCurrent = useCallback(
-    async (amount: number) => {
+    async (amount: number, description: string) => {
       if (!user) {
         throw new Error("Please sign in to continue.");
       }
@@ -229,10 +242,13 @@ export function DashboardFinanceProvider({
         throw new Error("Withdraw amount must be greater than zero.");
       }
 
-      await upsertMonthlyFlow(user.uid, currentMonthId as MonthId, {
-        ...currentMonthly,
-        manualWithdrawn: currentMonthly.manualWithdrawn + safeAmount,
-      });
+      await applyWithdrawWithSavingsRule(
+        user.uid,
+        currentMonthId as MonthId,
+        currentMonthly,
+        safeAmount,
+        description,
+      );
     },
     [currentMonthId, currentMonthly, user],
   );

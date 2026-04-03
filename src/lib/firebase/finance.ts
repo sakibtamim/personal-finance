@@ -13,6 +13,7 @@ import {
   type ExpenseItem,
   type MonthId,
   type MonthlyFlow,
+  type WithdrawItem,
 } from "@/types/finance";
 
 export type MonthlyFlowEntry = {
@@ -26,6 +27,11 @@ type MonthlyFlowDoc = {
   manualSaved?: number;
   manualWithdrawn?: number;
   expenseItems?: Array<{
+    id?: string;
+    description?: string;
+    amount?: number;
+  }>;
+  withdrawItems?: Array<{
     id?: string;
     description?: string;
     amount?: number;
@@ -52,12 +58,40 @@ function normalizeExpenseItems(
     );
 }
 
+function normalizeWithdrawItems(
+  items: MonthlyFlowDoc["withdrawItems"],
+): WithdrawItem[] {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items
+    .map((item) => ({
+      id: typeof item?.id === "string" ? item.id : "",
+      description:
+        typeof item?.description === "string" ? item.description.trim() : "",
+      amount: normalizeAmount(item?.amount),
+    }))
+    .filter(
+      (item) =>
+        item.id.length > 0 && item.description.length > 0 && item.amount > 0,
+    );
+}
+
 function createExpenseItemId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
   }
 
   return `expense-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function createWithdrawItemId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `withdraw-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function normalizeAmount(value: number | undefined): number {
@@ -79,6 +113,7 @@ function normalizeMonthlyFlow(data?: MonthlyFlowDoc): MonthlyFlow {
     manualSaved: normalizeAmount(data?.manualSaved),
     manualWithdrawn: normalizeAmount(data?.manualWithdrawn),
     expenseItems: normalizeExpenseItems(data?.expenseItems),
+    withdrawItems: normalizeWithdrawItems(data?.withdrawItems),
   };
 }
 
@@ -200,6 +235,21 @@ export async function upsertMonthlyFlow(
         )
     : [];
 
+  const safeWithdrawItems = Array.isArray(values.withdrawItems)
+    ? values.withdrawItems
+        .map((item) => ({
+          id: item.id,
+          description: item.description.trim(),
+          amount: normalizeAmount(item.amount),
+        }))
+        .filter(
+          (item) =>
+            item.id.length > 0 &&
+            item.description.length > 0 &&
+            item.amount > 0,
+        )
+    : [];
+
   await setDoc(
     monthlyDocRef(uid, monthId),
     {
@@ -208,6 +258,7 @@ export async function upsertMonthlyFlow(
       manualSaved: values.manualSaved,
       manualWithdrawn: values.manualWithdrawn,
       expenseItems: safeExpenseItems,
+      withdrawItems: safeWithdrawItems,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
@@ -254,4 +305,36 @@ export async function applyExpenseWithSpendingRule(
   });
 
   return breakdown;
+}
+
+export async function applyWithdrawWithSavingsRule(
+  uid: string,
+  monthId: MonthId,
+  currentMonthly: MonthlyFlow,
+  amount: number,
+  description = "Withdraw",
+): Promise<void> {
+  const safeAmount = Number.isFinite(amount) ? Math.max(amount, 0) : 0;
+  const safeDescription = description.trim();
+
+  if (safeAmount <= 0) {
+    throw new Error("Withdraw amount must be greater than zero.");
+  }
+
+  if (!safeDescription) {
+    throw new Error("Withdraw reason is required.");
+  }
+
+  await upsertMonthlyFlow(uid, monthId, {
+    ...currentMonthly,
+    manualWithdrawn: currentMonthly.manualWithdrawn + safeAmount,
+    withdrawItems: [
+      ...(currentMonthly.withdrawItems ?? []),
+      {
+        id: createWithdrawItemId(),
+        description: safeDescription,
+        amount: safeAmount,
+      },
+    ],
+  });
 }
