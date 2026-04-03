@@ -232,7 +232,10 @@ export function HomeAuthPanel() {
     }
 
     try {
-      await upsertUserSettings(user.uid, { currency: nextCurrency });
+      await upsertUserSettings(user.uid, {
+        currency: nextCurrency,
+        theme,
+      });
     } catch {
       setErrorMessage("Unable to update currency setting.");
     }
@@ -246,7 +249,10 @@ export function HomeAuthPanel() {
     }
 
     try {
-      await upsertUserSettings(user.uid, { theme: nextTheme });
+      await upsertUserSettings(user.uid, {
+        currency,
+        theme: nextTheme,
+      });
     } catch {
       setErrorMessage("Unable to update theme setting.");
     }

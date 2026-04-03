@@ -46,17 +46,17 @@ export default function ProfilePage() {
         title="Profile"
         description="Manage your account information and sign out securely."
       >
-        <Card className="rounded-2xl border-border/80 bg-card/95">
+        <Card className="rounded-2xl border-border/50 bg-card shadow-sm">
           <CardContent className="space-y-4 p-5">
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-xl border bg-muted/20 p-3 sm:col-span-2">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              <div className="rounded-xl border border-border/50 bg-muted/20 p-3 sm:col-span-2">
+                <p className="text-xs font-medium text-muted-foreground">
                   Account status
                 </p>
                 <p className="mt-1 text-sm font-semibold">Active</p>
               </div>
-              <div className="rounded-xl border bg-muted/20 p-3">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+                <p className="text-xs font-medium text-muted-foreground">
                   Plan
                 </p>
                 <p className="mt-1 text-sm font-semibold">Personal</p>
@@ -66,9 +66,9 @@ export default function ProfilePage() {
             {profileRows.map((row) => (
               <div
                 key={row.label}
-                className="space-y-1 rounded-xl border bg-background/60 p-3"
+                className="space-y-1 rounded-xl border border-border/50 bg-background/80 p-3"
               >
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                <p className="text-xs font-medium text-muted-foreground">
                   {row.label}
                 </p>
                 <p className="text-sm font-semibold">{row.value}</p>

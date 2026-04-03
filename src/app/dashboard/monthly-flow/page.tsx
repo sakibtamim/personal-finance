@@ -115,6 +115,42 @@ export default function MonthlyFlowPage() {
     }
   }
 
+  async function handleClearMonthData() {
+    if (hasNoMonthlyData) {
+      return;
+    }
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSaving(true);
+
+    const clearedValues: MonthForm = {
+      income: "0",
+      expense: "0",
+      manualSaved: "0",
+      manualWithdrawn: "0",
+    };
+
+    try {
+      setForm(clearedValues);
+      await saveSelectedMonth({
+        income: 0,
+        expense: 0,
+        manualSaved: 0,
+        manualWithdrawn: 0,
+      });
+      setSuccessMessage("Month data cleared.");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to clear month data.");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <DashboardAuthGate>
       <DashboardSection
@@ -123,6 +159,7 @@ export default function MonthlyFlowPage() {
         actions={
           <>
             <Button
+              size="lg"
               variant="outline"
               className="rounded-xl"
               onClick={() =>
@@ -133,6 +170,7 @@ export default function MonthlyFlowPage() {
               Previous
             </Button>
             <Button
+              size="lg"
               variant="outline"
               className="rounded-xl"
               onClick={() => setSelectedMonthId(shiftMonth(selectedMonthId, 1))}
@@ -143,11 +181,11 @@ export default function MonthlyFlowPage() {
           </>
         }
       >
-        <div className="grid gap-4 rounded-xl border bg-muted/20 p-4 md:grid-cols-[1fr_auto] md:items-end">
+        <div className="grid gap-4 rounded-xl border border-border/50 bg-background/70 p-4 md:grid-cols-[1fr_auto] md:items-end">
           <div className="space-y-2">
             <Label
               htmlFor="month-selector"
-              className="text-xs text-muted-foreground"
+              className="text-sm text-muted-foreground"
             >
               Month
             </Label>
@@ -158,13 +196,17 @@ export default function MonthlyFlowPage() {
               onChange={(event) => setSelectedMonthId(event.target.value)}
             />
           </div>
-          <Button variant="secondary" className="rounded-xl md:min-w-44">
+          <Button
+            size="lg"
+            variant="secondary"
+            className="rounded-xl md:min-w-44"
+          >
             Viewing {selectedMonthId}
           </Button>
         </div>
 
         {hasNoMonthlyData ? (
-          <div className="rounded-xl border border-dashed bg-muted/20 p-3 text-sm text-muted-foreground">
+          <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-3 text-sm text-muted-foreground">
             No data for this month yet. Add values below and save to start
             tracking.
           </div>
@@ -190,12 +232,12 @@ export default function MonthlyFlowPage() {
           />
         </div>
 
-        <Card className="rounded-xl border-dashed">
-          <CardContent className="space-y-3 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <Card className="rounded-xl border border-border/50 bg-card shadow-sm">
+          <CardContent className="space-y-4 p-5">
+            <p className="text-sm font-semibold text-foreground">
               Manual month adjustments
             </p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Input
                 inputMode="decimal"
                 placeholder="Income"
@@ -241,8 +283,18 @@ export default function MonthlyFlowPage() {
                 }
               />
             </div>
-            <div className="flex justify-end">
+            <div className="flex flex-wrap justify-end gap-2">
               <Button
+                size="lg"
+                variant="outline"
+                className="rounded-xl"
+                onClick={handleClearMonthData}
+                disabled={isSaving || hasNoMonthlyData}
+              >
+                {isSaving ? "Updating month..." : "Clear month data"}
+              </Button>
+              <Button
+                size="lg"
                 className="rounded-xl"
                 onClick={handleSave}
                 disabled={isSaving || !isFormValid}
@@ -252,13 +304,13 @@ export default function MonthlyFlowPage() {
             </div>
 
             {errorMessage ? (
-              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-md border border-destructive/25 bg-destructive/8 px-3 py-2 text-sm text-destructive/90 duration-200">
+              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-lg border border-destructive/20 bg-destructive/6 px-3 py-2.5 text-sm text-destructive/90 duration-200">
                 {errorMessage}
               </p>
             ) : null}
 
             {successMessage ? (
-              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-md border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 text-sm text-emerald-700 duration-200 dark:text-emerald-300">
+              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-lg border border-emerald-500/20 bg-emerald-500/6 px-3 py-2.5 text-sm text-emerald-700 duration-200 dark:text-emerald-300">
                 {successMessage}
               </p>
             ) : null}

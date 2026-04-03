@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Moon, Sun } from "lucide-react";
 
 import { DashboardAuthGate } from "@/components/dashboard/dashboard-auth-gate";
 import { DashboardSection } from "@/components/layout/dashboard-section";
@@ -12,7 +13,6 @@ import { useAuthStore } from "@/store/use-auth-store";
 import { useSettingsStore } from "@/store/use-settings-store";
 import {
   CURRENCY_OPTIONS,
-  THEME_OPTIONS,
   type AppTheme,
   type CurrencyCode,
 } from "@/types/settings";
@@ -42,7 +42,10 @@ export default function SettingsPage() {
     }
 
     try {
-      await upsertUserSettings(user.uid, { currency: nextCurrency });
+      await upsertUserSettings(user.uid, {
+        currency: nextCurrency,
+        theme,
+      });
       setSuccessMessage("Currency updated.");
     } catch {
       setCurrency(previousCurrency);
@@ -65,7 +68,10 @@ export default function SettingsPage() {
     }
 
     try {
-      await upsertUserSettings(user.uid, { theme: nextTheme });
+      await upsertUserSettings(user.uid, {
+        currency,
+        theme: nextTheme,
+      });
       setSuccessMessage("Theme updated.");
     } catch {
       setTheme(previousTheme);
@@ -75,6 +81,10 @@ export default function SettingsPage() {
     }
   }
 
+  const nextTheme: AppTheme = theme === "light" ? "dark" : "light";
+  const nextThemeLabel =
+    theme === "light" ? "Switch to dark theme" : "Switch to light theme";
+
   return (
     <DashboardAuthGate>
       <DashboardSection
@@ -82,14 +92,12 @@ export default function SettingsPage() {
         description="Configure global preferences such as currency and light or dark theme."
       >
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="rounded-2xl border-border/80 bg-card/95">
+          <Card className="rounded-2xl border-border/50 bg-card shadow-sm">
             <CardContent className="space-y-3 p-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Currency
-              </p>
+              <p className="text-sm font-semibold text-foreground">Currency</p>
               <Label
                 htmlFor="currency"
-                className="text-xs text-muted-foreground"
+                className="text-sm text-muted-foreground"
               >
                 Global display currency
               </Label>
@@ -108,34 +116,36 @@ export default function SettingsPage() {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Applies across all dashboard sections.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl border-border/80 bg-card/95">
+          <Card className="rounded-2xl border-border/50 bg-card shadow-sm">
             <CardContent className="space-y-3 p-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Theme
-              </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm font-semibold text-foreground">Theme</p>
+              <p className="text-sm text-muted-foreground">
                 Choose the interface appearance.
               </p>
               <div className="flex gap-2">
-                {THEME_OPTIONS.map((option) => (
-                  <Button
-                    key={option}
-                    variant={theme === option ? "secondary" : "outline"}
-                    className="rounded-xl"
-                    onClick={() => handleThemeChange(option as AppTheme)}
-                    disabled={isSavingTheme}
-                  >
-                    {option === "light" ? "Light" : "Dark"}
-                  </Button>
-                ))}
+                <Button
+                  size="icon-lg"
+                  variant="outline"
+                  className="rounded-xl border-border/60 bg-card"
+                  aria-label={nextThemeLabel}
+                  title={nextThemeLabel}
+                  onClick={() => handleThemeChange(nextTheme)}
+                  disabled={isSavingTheme}
+                >
+                  {theme === "light" ? (
+                    <Moon className="size-4" aria-hidden="true" />
+                  ) : (
+                    <Sun className="size-4" aria-hidden="true" />
+                  )}
+                </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {isSavingTheme
                   ? "Saving theme..."
                   : "Theme preference is global and persistent."}
@@ -145,13 +155,13 @@ export default function SettingsPage() {
         </div>
 
         {errorMessage ? (
-          <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-md border border-destructive/25 bg-destructive/8 px-3 py-2 text-sm text-destructive/90 duration-200">
+          <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-lg border border-destructive/20 bg-destructive/6 px-3 py-2.5 text-sm text-destructive/90 duration-200">
             {errorMessage}
           </p>
         ) : null}
 
         {successMessage ? (
-          <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-md border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 text-sm text-emerald-700 duration-200 dark:text-emerald-300">
+          <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-lg border border-emerald-500/20 bg-emerald-500/6 px-3 py-2.5 text-sm text-emerald-700 duration-200 dark:text-emerald-300">
             {successMessage}
           </p>
         ) : null}

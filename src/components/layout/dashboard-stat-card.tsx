@@ -18,23 +18,19 @@ export function DashboardStatCard({
 }: DashboardStatCardProps) {
   return (
     <Card
-      className={cn("rounded-xl border-border/60 bg-background/70", className)}
+      className={cn(
+        "rounded-xl border-border/50 bg-background/80 shadow-sm",
+        className,
+      )}
     >
-      <CardContent className="space-y-1.5 p-4 md:p-5">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
+      <CardContent className="space-y-2.5 p-4 md:p-5">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
         <p
-          className={cn(
-            "text-2xl font-semibold leading-tight md:text-[1.75rem]",
-            valueClassName,
-          )}
+          className={cn("text-3xl font-semibold leading-tight", valueClassName)}
         >
           {value}
         </p>
-        {hint ? (
-          <p className="pt-0.5 text-xs text-muted-foreground">{hint}</p>
-        ) : null}
+        {hint ? <p className="text-sm text-muted-foreground">{hint}</p> : null}
       </CardContent>
     </Card>
   );

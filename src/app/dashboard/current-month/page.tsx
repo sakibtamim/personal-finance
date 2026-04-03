@@ -159,12 +159,12 @@ export default function CurrentMonthPage() {
         title="Current Month"
         description="Fast daily workflow for your active working month with quick finance actions."
         actions={
-          <span className="rounded-lg border bg-muted/30 px-3 py-1 text-xs text-muted-foreground">
+          <span className="rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
             Working month mode
           </span>
         }
       >
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <DashboardStatCard
             label="Active month"
             value={currentMonthId}
@@ -182,15 +182,15 @@ export default function CurrentMonthPage() {
         </div>
 
         {hasNoCurrentData ? (
-          <div className="rounded-xl border border-dashed bg-muted/20 p-3 text-sm text-muted-foreground">
+          <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-3 text-sm text-muted-foreground">
             Start with Add income, then track expense, save, or withdraw from
             this panel.
           </div>
         ) : null}
 
-        <Card className="rounded-2xl border-primary/30 bg-card/95">
-          <div className="space-y-4 p-4 md:p-5">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <Card className="rounded-2xl border-border/50 bg-card shadow-sm">
+          <div className="space-y-4 p-5 md:p-6">
+            <p className="text-sm font-semibold text-foreground">
               Quick actions
             </p>
 
@@ -198,7 +198,7 @@ export default function CurrentMonthPage() {
               <div className="space-y-2" id="quick-income-section">
                 <Label
                   htmlFor="quick-income-input"
-                  className="text-xs text-muted-foreground"
+                  className="text-sm text-muted-foreground"
                 >
                   Add income
                 </Label>
@@ -213,7 +213,7 @@ export default function CurrentMonthPage() {
               <div className="space-y-2" id="quick-expense-section">
                 <Label
                   htmlFor="quick-expense-input"
-                  className="text-xs text-muted-foreground"
+                  className="text-sm text-muted-foreground"
                 >
                   Add expense
                 </Label>
@@ -229,6 +229,7 @@ export default function CurrentMonthPage() {
 
             <div className="flex flex-wrap gap-2 pt-1">
               <Button
+                size="lg"
                 className="rounded-xl"
                 onClick={() => handleAction("income")}
                 disabled={!canSubmitIncome}
@@ -236,6 +237,7 @@ export default function CurrentMonthPage() {
                 {pendingAction === "income" ? "Adding income..." : "Add income"}
               </Button>
               <Button
+                size="lg"
                 variant="secondary"
                 className="rounded-xl"
                 onClick={() => handleAction("expense")}
@@ -246,6 +248,7 @@ export default function CurrentMonthPage() {
                   : "Add expense"}
               </Button>
               <Button
+                size="lg"
                 variant="outline"
                 className="rounded-xl"
                 onClick={() => handleAction("save")}
@@ -254,6 +257,7 @@ export default function CurrentMonthPage() {
                 {pendingAction === "save" ? "Saving..." : "Save"}
               </Button>
               <Button
+                size="lg"
                 variant="outline"
                 className="rounded-xl"
                 onClick={() => handleAction("withdraw")}
@@ -264,13 +268,13 @@ export default function CurrentMonthPage() {
             </div>
 
             {errorMessage ? (
-              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-md border border-destructive/25 bg-destructive/8 px-3 py-2 text-sm text-destructive/90 duration-200">
+              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-lg border border-destructive/20 bg-destructive/6 px-3 py-2.5 text-sm text-destructive/90 duration-200">
                 {errorMessage}
               </p>
             ) : null}
 
             {successMessage ? (
-              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-md border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 text-sm text-emerald-700 duration-200 dark:text-emerald-300">
+              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-lg border border-emerald-500/20 bg-emerald-500/6 px-3 py-2.5 text-sm text-emerald-700 duration-200 dark:text-emerald-300">
                 {successMessage}
               </p>
             ) : null}
