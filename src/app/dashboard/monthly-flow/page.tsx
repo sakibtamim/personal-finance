@@ -38,6 +38,8 @@ export default function MonthlyFlowPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [newExpenseAmount, setNewExpenseAmount] = useState("0");
+  const [newExpenseDescription, setNewExpenseDescription] = useState("");
   const [form, setForm] = useState<MonthForm>({
     income: "0",
     expense: "0",
@@ -86,6 +88,11 @@ export default function MonthlyFlowPage() {
     });
   }, [selectedMonthly]);
 
+  const canAddExpenseEntry =
+    parseNonNegativeAmount(newExpenseAmount) > 0 &&
+    newExpenseDescription.trim().length > 0 &&
+    !isSaving;
+
   async function handleSave() {
     if (!isFormValid) {
       setErrorMessage("Use valid non-negative numbers for all month fields.");
@@ -102,6 +109,7 @@ export default function MonthlyFlowPage() {
         expense: parseNonNegativeAmount(form.expense),
         manualSaved: parseNonNegativeAmount(form.manualSaved),
         manualWithdrawn: parseNonNegativeAmount(form.manualWithdrawn),
+        expenseItems: selectedMonthly.expenseItems ?? [],
       });
       setSuccessMessage("Monthly flow saved.");
     } catch (error) {
@@ -138,6 +146,7 @@ export default function MonthlyFlowPage() {
         expense: 0,
         manualSaved: 0,
         manualWithdrawn: 0,
+        expenseItems: [],
       });
       setSuccessMessage("Month data cleared.");
     } catch (error) {
@@ -145,6 +154,60 @@ export default function MonthlyFlowPage() {
         setErrorMessage(error.message);
       } else {
         setErrorMessage("Unable to clear month data.");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleAddExpenseEntry() {
+    const amount = parseNonNegativeAmount(newExpenseAmount);
+    const description = newExpenseDescription.trim();
+
+    if (amount <= 0) {
+      setErrorMessage("Enter an expense amount greater than zero.");
+      return;
+    }
+
+    if (!description) {
+      setErrorMessage("Enter a short reason for this expense.");
+      return;
+    }
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSaving(true);
+
+    const currentExpense = parseNonNegativeAmount(form.expense);
+
+    try {
+      await saveSelectedMonth({
+        income: parseNonNegativeAmount(form.income),
+        expense: currentExpense + amount,
+        manualSaved: parseNonNegativeAmount(form.manualSaved),
+        manualWithdrawn: parseNonNegativeAmount(form.manualWithdrawn),
+        expenseItems: [
+          ...(selectedMonthly.expenseItems ?? []),
+          {
+            id: `expense-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            description,
+            amount,
+          },
+        ],
+      });
+
+      setForm((previous) => ({
+        ...previous,
+        expense: String(currentExpense + amount),
+      }));
+      setNewExpenseAmount("0");
+      setNewExpenseDescription("");
+      setSuccessMessage("Expense entry added.");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to add expense entry.");
       }
     } finally {
       setIsSaving(false);
@@ -234,56 +297,137 @@ export default function MonthlyFlowPage() {
 
         <Card className="rounded-xl border border-border/50 bg-card shadow-sm">
           <CardContent className="space-y-4 p-5">
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-base font-semibold text-foreground">
               Manual month adjustments
             </p>
+            <p className="text-sm text-muted-foreground">
+              Edit totals directly, or add expense entries with reason below.
+            </p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Input
-                inputMode="decimal"
-                placeholder="Income"
-                value={form.income}
-                onChange={(event) =>
-                  setForm((previous) => ({
-                    ...previous,
-                    income: event.target.value,
-                  }))
-                }
-              />
-              <Input
-                inputMode="decimal"
-                placeholder="Expense"
-                value={form.expense}
-                onChange={(event) =>
-                  setForm((previous) => ({
-                    ...previous,
-                    expense: event.target.value,
-                  }))
-                }
-              />
-              <Input
-                inputMode="decimal"
-                placeholder="Save"
-                value={form.manualSaved}
-                onChange={(event) =>
-                  setForm((previous) => ({
-                    ...previous,
-                    manualSaved: event.target.value,
-                  }))
-                }
-              />
-              <Input
-                inputMode="decimal"
-                placeholder="Withdraw"
-                value={form.manualWithdrawn}
-                onChange={(event) =>
-                  setForm((previous) => ({
-                    ...previous,
-                    manualWithdrawn: event.target.value,
-                  }))
-                }
-              />
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="monthly-income-input"
+                  className="text-xs text-muted-foreground"
+                >
+                  Income
+                </Label>
+                <Input
+                  id="monthly-income-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={form.income}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      income: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="monthly-expense-input"
+                  className="text-xs text-muted-foreground"
+                >
+                  Expense total
+                </Label>
+                <Input
+                  id="monthly-expense-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={form.expense}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      expense: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="monthly-save-input"
+                  className="text-xs text-muted-foreground"
+                >
+                  Manual save
+                </Label>
+                <Input
+                  id="monthly-save-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={form.manualSaved}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      manualSaved: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="monthly-withdraw-input"
+                  className="text-xs text-muted-foreground"
+                >
+                  Manual withdraw
+                </Label>
+                <Input
+                  id="monthly-withdraw-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={form.manualWithdrawn}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      manualWithdrawn: event.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                Add expense entry
+              </p>
+              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto]">
+                <Input
+                  id="monthly-expense-entry-amount-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  placeholder="Amount"
+                  value={newExpenseAmount}
+                  onChange={(event) => setNewExpenseAmount(event.target.value)}
+                />
+                <Input
+                  id="monthly-expense-entry-reason-input"
+                  placeholder="Reason (for example: Bus fare, Dinner, Snacks)"
+                  value={newExpenseDescription}
+                  onChange={(event) =>
+                    setNewExpenseDescription(event.target.value)
+                  }
+                />
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="rounded-xl md:min-w-32"
+                  onClick={handleAddExpenseEntry}
+                  disabled={!canAddExpenseEntry}
+                >
+                  {isSaving ? "Adding..." : "Add expense"}
+                </Button>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-end gap-2 border-t border-border/50 pt-2">
               <Button
                 size="lg"
                 variant="outline"
@@ -314,6 +458,34 @@ export default function MonthlyFlowPage() {
                 {successMessage}
               </p>
             ) : null}
+
+            <div className="space-y-2 rounded-xl border border-border/50 bg-background/70 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                Expense entries ({selectedMonthly.expenseItems?.length ?? 0})
+              </p>
+              {selectedMonthly.expenseItems &&
+              selectedMonthly.expenseItems.length > 0 ? (
+                <ul className="space-y-1.5 text-sm">
+                  {selectedMonthly.expenseItems.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-card px-3 py-2"
+                    >
+                      <span className="text-foreground">
+                        {item.description}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {currencyFormatter.format(item.amount)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No expense entries in this month yet.
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </DashboardSection>

@@ -57,10 +57,22 @@ describe("dashboard view utils", () => {
 
     expect(rows).toEqual([
       {
+        id: "2026-03-monthly-net",
+        monthId: "2026-03",
+        type: "monthly-net",
+        amount: 30,
+      },
+      {
         id: "2026-03-withdraw",
         monthId: "2026-03",
         type: "withdraw",
         amount: 7,
+      },
+      {
+        id: "2026-02-monthly-net",
+        monthId: "2026-02",
+        type: "monthly-net",
+        amount: 10,
       },
       { id: "2026-02-save", monthId: "2026-02", type: "save", amount: 5 },
     ]);

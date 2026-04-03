@@ -3,7 +3,7 @@ import type { MonthlyFlowEntry } from "@/lib/firebase/finance";
 export type SavingsActivity = {
   id: string;
   monthId: string;
-  type: "save" | "withdraw";
+  type: "monthly-net" | "save" | "withdraw";
   amount: number;
 };
 
@@ -48,6 +48,17 @@ export function deriveSavingsActivities(
     .slice()
     .sort((a, b) => b.monthId.localeCompare(a.monthId))
     .forEach((entry) => {
+      const monthlyNet = entry.monthly.income - entry.monthly.expense;
+
+      if (monthlyNet !== 0) {
+        rows.push({
+          id: `${entry.monthId}-monthly-net`,
+          monthId: entry.monthId,
+          type: "monthly-net",
+          amount: monthlyNet,
+        });
+      }
+
       if (entry.monthly.manualSaved > 0) {
         rows.push({
           id: `${entry.monthId}-save`,

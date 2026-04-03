@@ -21,6 +21,11 @@ service cloud.firestore {
       return value is number && value >= 0;
     }
 
+    function isValidExpenseItems(value) {
+      return value is list
+        && value.size() <= 500;
+    }
+
     function hasOnlyFields(data, allowed) {
       return data.keys().hasOnly(allowed);
     }
@@ -36,12 +41,14 @@ service cloud.firestore {
             "expense",
             "manualSaved",
             "manualWithdrawn",
+            "expenseItems",
             "updatedAt"
           ])
           && isValidMoney(request.resource.data.income)
           && isValidMoney(request.resource.data.expense)
           && isValidMoney(request.resource.data.manualSaved)
-          && isValidMoney(request.resource.data.manualWithdrawn);
+          && isValidMoney(request.resource.data.manualWithdrawn)
+          && isValidExpenseItems(request.resource.data.expenseItems);
         allow delete: if isOwner(uid);
       }
 

@@ -43,10 +43,11 @@ type DashboardFinanceContextValue = {
   totalSavings: number;
   savingsAtSelectedMonth: number;
   activities: SavingsActivity[];
+  monthlyEntries: MonthlyFlowEntry[];
   isLoading: boolean;
   saveSelectedMonth: (values: MonthlyFlow) => Promise<void>;
   addIncomeCurrent: (amount: number) => Promise<void>;
-  addExpenseCurrent: (amount: number) => Promise<void>;
+  addExpenseCurrent: (amount: number, description: string) => Promise<void>;
   addSavedCurrent: (amount: number) => Promise<void>;
   addWithdrawCurrent: (amount: number) => Promise<void>;
 };
@@ -140,6 +141,18 @@ export function DashboardFinanceProvider({
         expense: clampAmount(values.expense),
         manualSaved: clampAmount(values.manualSaved),
         manualWithdrawn: clampAmount(values.manualWithdrawn),
+        expenseItems: (values.expenseItems ?? [])
+          .map((item) => ({
+            id: item.id,
+            description: item.description.trim(),
+            amount: clampAmount(item.amount),
+          }))
+          .filter(
+            (item) =>
+              item.id.length > 0 &&
+              item.description.length > 0 &&
+              item.amount > 0,
+          ),
       });
     },
     [selectedMonthId, user],
@@ -165,7 +178,7 @@ export function DashboardFinanceProvider({
   );
 
   const addExpenseCurrent = useCallback(
-    async (amount: number) => {
+    async (amount: number, description: string) => {
       if (!user) {
         throw new Error("Please sign in to continue.");
       }
@@ -180,6 +193,7 @@ export function DashboardFinanceProvider({
         currentMonthId as MonthId,
         currentMonthly,
         safeAmount,
+        description,
       );
     },
     [currentMonthId, currentMonthly, user],
@@ -244,6 +258,7 @@ export function DashboardFinanceProvider({
     const safeTotalSavings = user ? totalSavings : 0;
     const safeSavingsAtSelectedMonth = user ? savingsAtSelectedMonth : 0;
     const safeActivities = user ? activities : [];
+    const safeMonthlyEntries = user ? allEntries : [];
 
     return {
       currentMonthId,
@@ -256,6 +271,7 @@ export function DashboardFinanceProvider({
       totalSavings: safeTotalSavings,
       savingsAtSelectedMonth: safeSavingsAtSelectedMonth,
       activities: safeActivities,
+      monthlyEntries: safeMonthlyEntries,
       isLoading: status === "loading",
       saveSelectedMonth,
       addIncomeCurrent,
@@ -265,6 +281,7 @@ export function DashboardFinanceProvider({
     };
   }, [
     activities,
+    allEntries,
     addExpenseCurrent,
     addIncomeCurrent,
     addSavedCurrent,

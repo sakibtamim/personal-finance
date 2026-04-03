@@ -10,6 +10,7 @@ import {
 import { getFirebaseDb } from "@/lib/firebase/client";
 import {
   DEFAULT_MONTHLY_FLOW,
+  type ExpenseItem,
   type MonthId,
   type MonthlyFlow,
 } from "@/types/finance";
@@ -24,7 +25,40 @@ type MonthlyFlowDoc = {
   expense?: number;
   manualSaved?: number;
   manualWithdrawn?: number;
+  expenseItems?: Array<{
+    id?: string;
+    description?: string;
+    amount?: number;
+  }>;
 };
+
+function normalizeExpenseItems(
+  items: MonthlyFlowDoc["expenseItems"],
+): ExpenseItem[] {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items
+    .map((item) => ({
+      id: typeof item?.id === "string" ? item.id : "",
+      description:
+        typeof item?.description === "string" ? item.description.trim() : "",
+      amount: normalizeAmount(item?.amount),
+    }))
+    .filter(
+      (item) =>
+        item.id.length > 0 && item.description.length > 0 && item.amount > 0,
+    );
+}
+
+function createExpenseItemId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `expense-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
 
 function normalizeAmount(value: number | undefined): number {
   if (
@@ -44,6 +78,7 @@ function normalizeMonthlyFlow(data?: MonthlyFlowDoc): MonthlyFlow {
     expense: normalizeAmount(data?.expense),
     manualSaved: normalizeAmount(data?.manualSaved),
     manualWithdrawn: normalizeAmount(data?.manualWithdrawn),
+    expenseItems: normalizeExpenseItems(data?.expenseItems),
   };
 }
 
@@ -150,6 +185,21 @@ export async function upsertMonthlyFlow(
   monthId: MonthId,
   values: MonthlyFlow,
 ): Promise<void> {
+  const safeExpenseItems = Array.isArray(values.expenseItems)
+    ? values.expenseItems
+        .map((item) => ({
+          id: item.id,
+          description: item.description.trim(),
+          amount: normalizeAmount(item.amount),
+        }))
+        .filter(
+          (item) =>
+            item.id.length > 0 &&
+            item.description.length > 0 &&
+            item.amount > 0,
+        )
+    : [];
+
   await setDoc(
     monthlyDocRef(uid, monthId),
     {
@@ -157,6 +207,7 @@ export async function upsertMonthlyFlow(
       expense: values.expense,
       manualSaved: values.manualSaved,
       manualWithdrawn: values.manualWithdrawn,
+      expenseItems: safeExpenseItems,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
@@ -168,11 +219,17 @@ export async function applyExpenseWithSpendingRule(
   monthId: MonthId,
   currentMonthly: MonthlyFlow,
   amount: number,
+  description = "Expense",
 ): Promise<{ fromCurrentMonth: number; fromSavings: number }> {
   const safeAmount = Number.isFinite(amount) ? Math.max(amount, 0) : 0;
+  const safeDescription = description.trim();
 
   if (safeAmount <= 0) {
     throw new Error("Expense amount must be greater than zero.");
+  }
+
+  if (!safeDescription) {
+    throw new Error("Expense reason is required.");
   }
 
   const totalSavings = await getTotalSavings(uid);
@@ -186,6 +243,14 @@ export async function applyExpenseWithSpendingRule(
   await upsertMonthlyFlow(uid, monthId, {
     ...currentMonthly,
     expense: currentMonthly.expense + safeAmount,
+    expenseItems: [
+      ...(currentMonthly.expenseItems ?? []),
+      {
+        id: createExpenseItemId(),
+        description: safeDescription,
+        amount: safeAmount,
+      },
+    ],
   });
 
   return breakdown;

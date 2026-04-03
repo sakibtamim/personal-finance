@@ -31,6 +31,7 @@ export default function CurrentMonthPage() {
 
   const [incomeAmount, setIncomeAmount] = useState("0");
   const [expenseAmount, setExpenseAmount] = useState("0");
+  const [expenseDescription, setExpenseDescription] = useState("");
   const [pendingAction, setPendingAction] = useState<ActionType | null>(null);
   const [optimisticIncome, setOptimisticIncome] = useState(0);
   const [optimisticExpense, setOptimisticExpense] = useState(0);
@@ -84,12 +85,18 @@ export default function CurrentMonthPage() {
   async function handleAction(action: ActionType) {
     setErrorMessage(null);
     setSuccessMessage(null);
+    const trimmedExpenseDescription = expenseDescription.trim();
 
     const amountValue =
       action === "income" || action === "save" ? incomeAmount : expenseAmount;
 
     if (!isPositiveAmount(amountValue)) {
       setErrorMessage("Enter an amount greater than zero.");
+      return;
+    }
+
+    if (action === "expense" && !trimmedExpenseDescription) {
+      setErrorMessage("Enter a short reason for this expense.");
       return;
     }
 
@@ -117,9 +124,10 @@ export default function CurrentMonthPage() {
       }
 
       if (action === "expense") {
-        await addExpenseCurrent(amount);
+        await addExpenseCurrent(amount, trimmedExpenseDescription);
         setSuccessMessage("Expense applied by spending rule.");
         setExpenseAmount("0");
+        setExpenseDescription("");
       }
 
       if (action === "save") {
@@ -204,6 +212,9 @@ export default function CurrentMonthPage() {
                 </Label>
                 <Input
                   id="quick-income-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
                   placeholder="0.00"
                   inputMode="decimal"
                   value={incomeAmount}
@@ -219,10 +230,21 @@ export default function CurrentMonthPage() {
                 </Label>
                 <Input
                   id="quick-expense-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
                   placeholder="0.00"
                   inputMode="decimal"
                   value={expenseAmount}
                   onChange={(event) => setExpenseAmount(event.target.value)}
+                />
+                <Input
+                  id="quick-expense-description-input"
+                  placeholder="Reason (for example: Bus fare, Snacks, Dinner)"
+                  value={expenseDescription}
+                  onChange={(event) =>
+                    setExpenseDescription(event.target.value)
+                  }
                 />
               </div>
             </div>
@@ -241,7 +263,9 @@ export default function CurrentMonthPage() {
                 variant="secondary"
                 className="rounded-xl"
                 onClick={() => handleAction("expense")}
-                disabled={!canSubmitExpense}
+                disabled={
+                  !canSubmitExpense || expenseDescription.trim().length === 0
+                }
               >
                 {pendingAction === "expense"
                   ? "Adding expense..."
@@ -278,6 +302,35 @@ export default function CurrentMonthPage() {
                 {successMessage}
               </p>
             ) : null}
+
+            <div className="space-y-2 rounded-xl border border-border/50 bg-background/70 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                Expense entries ({currentMonthly.expenseItems?.length ?? 0})
+              </p>
+              {currentMonthly.expenseItems &&
+              currentMonthly.expenseItems.length > 0 ? (
+                <ul className="space-y-1.5 text-sm">
+                  {currentMonthly.expenseItems.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-card px-3 py-2"
+                    >
+                      <span className="text-foreground">
+                        {item.description}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {currencyFormatter.format(item.amount)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No expense entries yet. Add your first one with an amount and
+                  reason.
+                </p>
+              )}
+            </div>
           </div>
         </Card>
       </DashboardSection>
