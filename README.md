@@ -180,6 +180,22 @@ pnpm firestore:deploy
 pnpm deploy:vercel
 ```
 
+## Dashboard UI System (Step 14+)
+
+Dashboard UX now uses a documented style and QA baseline.
+
+Reference files:
+
+- `DASHBOARD_STYLE_TOKENS.md` (typography, spacing, surfaces, feedback styles)
+- `DASHBOARD_QA_CHECKLIST.md` (manual verification checklist)
+
+Recommended flow before UI updates:
+
+1. Check style rules in `DASHBOARD_STYLE_TOKENS.md`.
+2. Implement changes in dashboard routes/components.
+3. Validate with `pnpm lint` and `pnpm test:run`.
+4. Run through `DASHBOARD_QA_CHECKLIST.md` for visual/interaction coverage.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

@@ -14,6 +14,11 @@ import {
   type MonthlyFlow,
 } from "@/types/finance";
 
+export type MonthlyFlowEntry = {
+  monthId: MonthId;
+  monthly: MonthlyFlow;
+};
+
 type MonthlyFlowDoc = {
   income?: number;
   expense?: number;
@@ -121,6 +126,22 @@ export function subscribeToTotalSavings(
     });
 
     callback(total);
+  });
+}
+
+export function subscribeToMonthlyFlows(
+  uid: string,
+  callback: (entries: MonthlyFlowEntry[]) => void,
+): () => void {
+  return onSnapshot(monthlyCollection(uid), (snapshot) => {
+    const entries = snapshot.docs
+      .map((document) => ({
+        monthId: document.id as MonthId,
+        monthly: normalizeMonthlyFlow(document.data() as MonthlyFlowDoc),
+      }))
+      .sort((a, b) => a.monthId.localeCompare(b.monthId));
+
+    callback(entries);
   });
 }
 

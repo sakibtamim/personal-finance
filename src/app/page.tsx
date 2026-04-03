@@ -1,5 +1,5 @@
-import { HomeAuthPanel } from "@/components/auth/home-auth-panel";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return <HomeAuthPanel />;
+  redirect("/dashboard");
 }
