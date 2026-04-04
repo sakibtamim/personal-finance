@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -29,6 +30,21 @@ export function AuthShell({
     <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-4 py-10">
       <Card className="w-full">
         <CardHeader>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="relative inline-flex size-8 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-background shadow-sm">
+              <Image
+                src="/logo.png"
+                alt="Finance Hub"
+                fill
+                sizes="32px"
+                className="object-cover scale-[1]"
+                priority
+              />
+            </span>
+            <span className="text-xs font-semibold tracking-wide text-muted-foreground">
+              Finance Hub
+            </span>
+          </div>
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>

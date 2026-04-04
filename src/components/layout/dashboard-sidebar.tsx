@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Landmark, LogOut, Moon, Sun } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -74,8 +75,15 @@ export function DashboardSidebar() {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-border/50 bg-card/92 px-4 py-6 backdrop-blur md:block">
       <div className="flex h-full flex-col">
         <div className="flex items-center gap-2.5 px-2">
-          <span className="inline-flex size-9 items-center justify-center rounded-xl border border-border/50 bg-background shadow-sm">
-            <Landmark className="size-4.5" aria-hidden="true" />
+          <span className="relative inline-flex size-9 items-center justify-center overflow-hidden rounded-xl border border-border/50 bg-background shadow-sm">
+            <Image
+              src="/logo.png"
+              alt="Finance Hub"
+              fill
+              sizes="36px"
+              className="object-cover scale-[1]"
+              priority
+            />
           </span>
           <span className="text-sm font-semibold tracking-wide text-foreground">
             Finance Hub
