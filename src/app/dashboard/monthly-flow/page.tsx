@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   isNonNegativeAmount,
   parseNonNegativeAmount,
@@ -58,6 +59,45 @@ export default function MonthlyFlowPage() {
       }),
     [currency],
   );
+
+  const selectedMonthLabel = useMemo(() => {
+    const [year, month] = selectedMonthId.split("-");
+    const parsedMonth = Number(month) - 1;
+
+    if (!year || !Number.isFinite(parsedMonth) || parsedMonth < 0) {
+      return selectedMonthId;
+    }
+
+    return new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric",
+    }).format(new Date(Number(year), parsedMonth, 1));
+  }, [selectedMonthId]);
+
+  const monthLabels = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, index) =>
+        new Intl.DateTimeFormat("en-US", { month: "short" }).format(
+          new Date(2026, index, 1),
+        ),
+      ),
+    [],
+  );
+
+  const selectedYear = useMemo(() => {
+    const year = Number(selectedMonthId.slice(0, 4));
+    return Number.isFinite(year) ? year : new Date().getFullYear();
+  }, [selectedMonthId]);
+
+  const selectedMonthIndex = useMemo(() => {
+    const month = Number(selectedMonthId.slice(5, 7));
+    return Number.isFinite(month) ? month - 1 : new Date().getMonth();
+  }, [selectedMonthId]);
+
+  const currentMonthId = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  }, []);
 
   const isFormValid = useMemo(
     () =>
@@ -279,58 +319,157 @@ export default function MonthlyFlowPage() {
     }
   }
 
+  function selectMonth(monthIndex: number) {
+    const nextMonth = String(monthIndex + 1).padStart(2, "0");
+    setSelectedMonthId(`${selectedYear}-${nextMonth}`);
+  }
+
   return (
     <DashboardAuthGate>
       <DashboardSection
         title="Monthly Flow"
         description="Review any past or current month and manually update values for historical records."
         actions={
-          <>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-xl"
-              onClick={() =>
-                setSelectedMonthId(shiftMonth(selectedMonthId, -1))
-              }
-              disabled={isSaving}
-            >
-              Previous
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-xl"
-              onClick={() => setSelectedMonthId(shiftMonth(selectedMonthId, 1))}
-              disabled={isSaving}
-            >
-              Next
-            </Button>
-          </>
+          <span className="rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            Monthly ledger mode
+          </span>
         }
       >
-        <div className="grid gap-4 rounded-xl border border-border/50 bg-background/70 p-4 md:grid-cols-[1fr_auto] md:items-end">
-          <div className="space-y-2">
-            <Label
-              htmlFor="month-selector"
-              className="text-sm text-muted-foreground"
-            >
-              Month
-            </Label>
-            <Input
-              id="month-selector"
-              type="month"
-              value={selectedMonthId}
-              onChange={(event) => setSelectedMonthId(event.target.value)}
-            />
+        <div className="rounded-2xl border border-border/50 bg-background/70 p-4 shadow-sm">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                    Month filter
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    Pick a month using compact dashboard controls.
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-foreground">
+                    <CalendarDays className="size-4 text-muted-foreground" />
+                    {selectedMonthLabel}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card/80 p-1 shadow-sm transition-colors duration-200">
+                <Button
+                  size="icon-sm"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() =>
+                    setSelectedMonthId(shiftMonth(selectedMonthId, -1))
+                  }
+                  disabled={isSaving}
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft />
+                </Button>
+                <Button
+                  size="icon-sm"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() =>
+                    setSelectedMonthId(shiftMonth(selectedMonthId, 1))
+                  }
+                  disabled={isSaving}
+                  aria-label="Next month"
+                >
+                  <ChevronRight />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="rounded-xl px-3"
+                  onClick={() => setSelectedMonthId(currentMonthId)}
+                  disabled={isSaving}
+                >
+                  This month
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/50 bg-card/80 p-4 shadow-sm transition-colors duration-200">
+              <div className="flex items-center justify-between gap-3 border-b border-border/50 pb-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Select month
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Choose a period within {selectedYear}.
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 p-1">
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    className="rounded-full"
+                    onClick={() =>
+                      setSelectedMonthId(shiftMonth(selectedMonthId, -12))
+                    }
+                    disabled={isSaving}
+                    aria-label="Previous year"
+                  >
+                    <ChevronLeft />
+                  </Button>
+                  <span className="min-w-14 px-1 text-center text-sm font-medium text-foreground">
+                    {selectedYear}
+                  </span>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    className="rounded-full"
+                    onClick={() =>
+                      setSelectedMonthId(shiftMonth(selectedMonthId, 12))
+                    }
+                    disabled={isSaving}
+                    aria-label="Next year"
+                  >
+                    <ChevronRight />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12">
+                {monthLabels.map((label, index) => {
+                  const isActive = index === selectedMonthIndex;
+
+                  return (
+                    <Button
+                      key={label}
+                      size="sm"
+                      variant={isActive ? "default" : "outline"}
+                      className={`rounded-xl px-3 py-5 text-sm font-medium transition-all duration-200 ${
+                        isActive
+                          ? "ring-1 ring-primary/40 shadow-sm shadow-primary/25"
+                          : "hover:border-primary/30 hover:bg-muted/60"
+                      }`}
+                      onClick={() => selectMonth(index)}
+                      disabled={isSaving}
+                      aria-pressed={isActive}
+                    >
+                      {label}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-3">
+                <p className="text-sm text-muted-foreground">
+                  Active month:{" "}
+                  <span className="font-medium text-foreground">
+                    {selectedMonthLabel}
+                  </span>
+                </p>
+                <span className="rounded-full border border-border/60 bg-muted/30 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                  Tap month chip to switch
+                </span>
+              </div>
+            </div>
           </div>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="rounded-xl md:min-w-44"
-          >
-            Viewing {selectedMonthId}
-          </Button>
         </div>
 
         {hasNoMonthlyData ? (
