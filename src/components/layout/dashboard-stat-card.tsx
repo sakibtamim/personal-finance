@@ -55,7 +55,7 @@ export function DashboardStatCard({
   return (
     <Card
       className={cn(
-        "animate-rise-fade-delay-2 relative overflow-hidden rounded-2xl border-border/60 bg-linear-to-br from-background/90 via-background/80 to-background/55 shadow-sm",
+        "relative overflow-hidden rounded-2xl border-border/60 bg-linear-to-br from-background/90 via-background/80 to-background/55 shadow-sm",
         className,
       )}
     >

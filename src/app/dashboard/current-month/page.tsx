@@ -329,7 +329,11 @@ export default function CurrentMonthPage() {
             <div className="space-y-4">
               <div className="space-y-3 rounded-2xl border border-emerald-500/30 bg-linear-to-br from-emerald-500/8 to-background/80 p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Wallet className="size-4 text-primary" />
+                  <Wallet
+                    className="size-4 text-primary"
+                    aria-hidden="true"
+                    focusable="false"
+                  />
                   Add income
                 </p>
                 <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
@@ -366,7 +370,11 @@ export default function CurrentMonthPage() {
 
               <div className="space-y-3 rounded-2xl border border-rose-500/30 bg-linear-to-br from-rose-500/10 to-background/80 p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <HandCoins className="size-4 text-rose-500" />
+                  <HandCoins
+                    className="size-4 text-rose-500"
+                    aria-hidden="true"
+                    focusable="false"
+                  />
                   Add expense entry
                 </p>
                 <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
@@ -406,7 +414,11 @@ export default function CurrentMonthPage() {
 
             <div className="space-y-3 rounded-2xl border border-amber-500/30 bg-linear-to-br from-amber-500/12 to-background/80 p-4">
               <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <PiggyBank className="size-4 text-amber-500" />
+                <PiggyBank
+                  className="size-4 text-amber-500"
+                  aria-hidden="true"
+                  focusable="false"
+                />
                 Add withdraw entry
               </p>
               <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">

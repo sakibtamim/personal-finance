@@ -124,7 +124,11 @@ export default function ProfilePage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-border/60 bg-background/75 p-4">
                 <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  <ShieldCheck className="size-3.5" />
+                  <ShieldCheck
+                    className="size-3.5"
+                    aria-hidden="true"
+                    focusable="false"
+                  />
                   Account status
                 </p>
                 <p className="mt-1 text-sm font-semibold">
@@ -133,7 +137,11 @@ export default function ProfilePage() {
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/75 p-4">
                 <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  <Mail className="size-3.5" />
+                  <Mail
+                    className="size-3.5"
+                    aria-hidden="true"
+                    focusable="false"
+                  />
                   Access channel
                 </p>
                 <p className="mt-1 text-sm font-semibold">

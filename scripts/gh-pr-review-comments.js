@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 
 function showHelp() {
@@ -62,9 +62,40 @@ if (!prNumber) {
   process.exit(1);
 }
 
+function parsePositiveInt(value, label) {
+  const parsed = Number.parseInt(String(value), 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    console.error(`❌ Error: ${label} must be a positive integer.`);
+    process.exit(1);
+  }
+  return parsed;
+}
+
+const parsedPrNumber = parsePositiveInt(prNumber, "PR number");
+if (reviewId) {
+  reviewId = String(parsePositiveInt(reviewId, "Review ID"));
+}
+
+function ghApiJson(path, { paginate = false, slurp = false } = {}) {
+  const args = ["api", path];
+  if (paginate) {
+    args.push("--paginate");
+  }
+  if (slurp) {
+    args.push("--slurp");
+  }
+
+  const output = execFileSync("gh", args, {
+    encoding: "utf8",
+    stdio: ["pipe", "pipe", "pipe"],
+  });
+
+  return JSON.parse(output);
+}
+
 function getCurrentUser() {
   try {
-    return execSync("gh api user --jq .login", {
+    return execFileSync("gh", ["api", "user", "--jq", ".login"], {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
     }).trim();
@@ -79,14 +110,11 @@ function getCurrentUser() {
 function getLastAddressedTime(prNum, user) {
   if (!user) return null;
   try {
-    // Fetch issue comments (timeline) to find the "addressed" marker
-    // Sorting by created_at desc to find latest
-    const cmd = `gh api "repos/:owner/:repo/issues/${prNum}/comments?sort=created&direction=desc" --paginate`;
-    const output = execSync(cmd, {
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    const comments = JSON.parse(output);
+    const pages = ghApiJson(
+      `repos/:owner/:repo/issues/${prNum}/comments?sort=created&direction=desc`,
+      { paginate: true, slurp: true },
+    );
+    const comments = pages.flat();
 
     const marker = comments.find(
       (c) =>
@@ -107,7 +135,7 @@ try {
   if (deltaMode) {
     console.log("🕵️ Delta Mode: Looking for your last 'Address' comment...");
     const user = getCurrentUser();
-    cutoffDate = getLastAddressedTime(prNumber, user);
+    cutoffDate = getLastAddressedTime(parsedPrNumber, user);
 
     if (cutoffDate) {
       console.log(
@@ -128,12 +156,11 @@ try {
       );
 
     // Fetch all comments to aggregate Review IDs
-    const cmd = `gh api "repos/:owner/:repo/pulls/${prNumber}/comments" --paginate`;
-    const output = execSync(cmd, {
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"],
+    const pages = ghApiJson(`repos/:owner/:repo/pulls/${parsedPrNumber}/comments`, {
+      paginate: true,
+      slurp: true,
     });
-    let comments = JSON.parse(output);
+    let comments = pages.flat();
 
     // Filter by date if in delta mode
     if (cutoffDate) {
@@ -203,12 +230,11 @@ try {
   }
 
   // Fetch specific review comments
-  const cmd = `gh api "repos/:owner/:repo/pulls/${prNumber}/reviews/${reviewId}/comments"`;
-  const output = execSync(cmd, {
-    encoding: "utf8",
-    stdio: ["pipe", "pipe", "pipe"],
-  });
-  let comments = JSON.parse(output);
+  const pages = ghApiJson(
+    `repos/:owner/:repo/pulls/${parsedPrNumber}/reviews/${reviewId}/comments`,
+    { paginate: true, slurp: true },
+  );
+  let comments = pages.flat();
 
   // Filter by date if in delta mode
   if (cutoffDate) {

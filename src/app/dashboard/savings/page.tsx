@@ -169,7 +169,7 @@ export default function SavingsPage() {
         </div>
 
         <div className="grid gap-3 rounded-2xl border border-border/60 bg-background/75 p-4 md:grid-cols-[auto_1fr_1fr] md:items-end">
-          <div className="space-y-1.5 md:min-w-42">
+          <div className="space-y-1.5 md:min-w-40">
             <Label
               htmlFor="savings-filter-mode"
               className="text-xs text-muted-foreground"
@@ -191,7 +191,7 @@ export default function SavingsPage() {
                   setSelectedMonthId(monthOptions[0]);
                 }
               }}
-              className="flex h-10 w-full rounded-xl border border-input bg-background/80 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+              className="h-10 w-full rounded-xl border border-input bg-background/80 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               <option value="all">All months</option>
               <option value="month">Single month</option>
@@ -211,7 +211,7 @@ export default function SavingsPage() {
                 id="savings-single-month"
                 value={selectedMonthId || monthOptions[0] || ""}
                 onChange={(event) => setSelectedMonthId(event.target.value)}
-                className="flex h-10 w-full rounded-xl border border-input bg-background/80 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="h-10 w-full rounded-xl border border-input bg-background/80 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 {monthOptions.map((monthId) => (
                   <option key={monthId} value={monthId}>
