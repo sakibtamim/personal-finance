@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "issues:report": "node scripts/generate-issues-report.js",
+    "pr:review-comments": "node scripts/gh-pr-review-comments.js",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
