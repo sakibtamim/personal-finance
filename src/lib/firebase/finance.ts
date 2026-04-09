@@ -11,6 +11,7 @@ import { getFirebaseDb } from "@/lib/firebase/client";
 import {
   DEFAULT_MONTHLY_FLOW,
   type ExpenseItem,
+  type IncomeItem,
   type MonthId,
   type MonthlyFlow,
   type WithdrawItem,
@@ -26,6 +27,11 @@ type MonthlyFlowDoc = {
   expense?: number;
   manualSaved?: number;
   manualWithdrawn?: number;
+  incomeItems?: Array<{
+    id?: string;
+    description?: string;
+    amount?: number;
+  }>;
   expenseItems?: Array<{
     id?: string;
     description?: string;
@@ -37,6 +43,26 @@ type MonthlyFlowDoc = {
     amount?: number;
   }>;
 };
+
+function normalizeIncomeItems(
+  items: MonthlyFlowDoc["incomeItems"],
+): IncomeItem[] {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items
+    .map((item) => ({
+      id: typeof item?.id === "string" ? item.id : "",
+      description:
+        typeof item?.description === "string" ? item.description.trim() : "",
+      amount: normalizeAmount(item?.amount),
+    }))
+    .filter(
+      (item) =>
+        item.id.length > 0 && item.description.length > 0 && item.amount > 0,
+    );
+}
 
 function normalizeExpenseItems(
   items: MonthlyFlowDoc["expenseItems"],
@@ -78,6 +104,14 @@ function normalizeWithdrawItems(
     );
 }
 
+function createIncomeItemId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `income-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 function createExpenseItemId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -112,6 +146,7 @@ function normalizeMonthlyFlow(data?: MonthlyFlowDoc): MonthlyFlow {
     expense: normalizeAmount(data?.expense),
     manualSaved: normalizeAmount(data?.manualSaved),
     manualWithdrawn: normalizeAmount(data?.manualWithdrawn),
+    incomeItems: normalizeIncomeItems(data?.incomeItems),
     expenseItems: normalizeExpenseItems(data?.expenseItems),
     withdrawItems: normalizeWithdrawItems(data?.withdrawItems),
   };
@@ -220,6 +255,21 @@ export async function upsertMonthlyFlow(
   monthId: MonthId,
   values: MonthlyFlow,
 ): Promise<void> {
+  const safeIncomeItems = Array.isArray(values.incomeItems)
+    ? values.incomeItems
+        .map((item) => ({
+          id: item.id,
+          description: item.description.trim(),
+          amount: normalizeAmount(item.amount),
+        }))
+        .filter(
+          (item) =>
+            item.id.length > 0 &&
+            item.description.length > 0 &&
+            item.amount > 0,
+        )
+    : [];
+
   const safeExpenseItems = Array.isArray(values.expenseItems)
     ? values.expenseItems
         .map((item) => ({
@@ -257,12 +307,45 @@ export async function upsertMonthlyFlow(
       expense: values.expense,
       manualSaved: values.manualSaved,
       manualWithdrawn: values.manualWithdrawn,
+      incomeItems: safeIncomeItems,
       expenseItems: safeExpenseItems,
       withdrawItems: safeWithdrawItems,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
   );
+}
+
+export async function applyIncomeEntry(
+  uid: string,
+  monthId: MonthId,
+  currentMonthly: MonthlyFlow,
+  amount: number,
+  description = "Income",
+): Promise<void> {
+  const safeAmount = Number.isFinite(amount) ? Math.max(amount, 0) : 0;
+  const safeDescription = description.trim();
+
+  if (safeAmount <= 0) {
+    throw new Error("Income amount must be greater than zero.");
+  }
+
+  if (!safeDescription) {
+    throw new Error("Income reason is required.");
+  }
+
+  await upsertMonthlyFlow(uid, monthId, {
+    ...currentMonthly,
+    income: currentMonthly.income + safeAmount,
+    incomeItems: [
+      ...(currentMonthly.incomeItems ?? []),
+      {
+        id: createIncomeItemId(),
+        description: safeDescription,
+        amount: safeAmount,
+      },
+    ],
+  });
 }
 
 export async function applyExpenseWithSpendingRule(

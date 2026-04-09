@@ -40,6 +40,8 @@ export default function MonthlyFlowPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [newIncomeAmount, setNewIncomeAmount] = useState("0");
+  const [newIncomeDescription, setNewIncomeDescription] = useState("");
   const [newExpenseAmount, setNewExpenseAmount] = useState("0");
   const [newExpenseDescription, setNewExpenseDescription] = useState("");
   const [newWithdrawAmount, setNewWithdrawAmount] = useState("0");
@@ -180,6 +182,11 @@ export default function MonthlyFlowPage() {
     newExpenseDescription.trim().length > 0 &&
     !isSaving;
 
+  const canAddIncomeEntry =
+    parseNonNegativeAmount(newIncomeAmount) > 0 &&
+    newIncomeDescription.trim().length > 0 &&
+    !isSaving;
+
   const canAddWithdrawEntry =
     parseNonNegativeAmount(newWithdrawAmount) > 0 &&
     newWithdrawDescription.trim().length > 0 &&
@@ -201,6 +208,7 @@ export default function MonthlyFlowPage() {
         expense: parseNonNegativeAmount(form.expense),
         manualSaved: parseNonNegativeAmount(form.manualSaved),
         manualWithdrawn: parseNonNegativeAmount(form.manualWithdrawn),
+        incomeItems: selectedMonthly.incomeItems ?? [],
         expenseItems: selectedMonthly.expenseItems ?? [],
         withdrawItems: selectedMonthly.withdrawItems ?? [],
       });
@@ -239,6 +247,7 @@ export default function MonthlyFlowPage() {
         expense: 0,
         manualSaved: 0,
         manualWithdrawn: 0,
+        incomeItems: [],
         expenseItems: [],
         withdrawItems: [],
       });
@@ -280,6 +289,7 @@ export default function MonthlyFlowPage() {
         expense: currentExpense + amount,
         manualSaved: parseNonNegativeAmount(form.manualSaved),
         manualWithdrawn: parseNonNegativeAmount(form.manualWithdrawn),
+        incomeItems: selectedMonthly.incomeItems ?? [],
         expenseItems: [
           ...(selectedMonthly.expenseItems ?? []),
           {
@@ -303,6 +313,62 @@ export default function MonthlyFlowPage() {
         setErrorMessage(error.message);
       } else {
         setErrorMessage("Unable to add expense entry.");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleAddIncomeEntry() {
+    const amount = parseNonNegativeAmount(newIncomeAmount);
+    const description = newIncomeDescription.trim();
+
+    if (amount <= 0) {
+      setErrorMessage("Enter an income amount greater than zero.");
+      return;
+    }
+
+    if (!description) {
+      setErrorMessage("Enter a short source for this income.");
+      return;
+    }
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSaving(true);
+
+    const currentIncome = parseNonNegativeAmount(form.income);
+
+    try {
+      await saveSelectedMonth({
+        income: currentIncome + amount,
+        expense: parseNonNegativeAmount(form.expense),
+        manualSaved: parseNonNegativeAmount(form.manualSaved),
+        manualWithdrawn: parseNonNegativeAmount(form.manualWithdrawn),
+        incomeItems: [
+          ...(selectedMonthly.incomeItems ?? []),
+          {
+            id: `income-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            description,
+            amount,
+          },
+        ],
+        expenseItems: selectedMonthly.expenseItems ?? [],
+        withdrawItems: selectedMonthly.withdrawItems ?? [],
+      });
+
+      setForm((previous) => ({
+        ...previous,
+        income: String(currentIncome + amount),
+      }));
+      setNewIncomeAmount("0");
+      setNewIncomeDescription("");
+      setSuccessMessage("Income entry added.");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to add income entry.");
       }
     } finally {
       setIsSaving(false);
@@ -335,6 +401,7 @@ export default function MonthlyFlowPage() {
         expense: parseNonNegativeAmount(form.expense),
         manualSaved: parseNonNegativeAmount(form.manualSaved),
         manualWithdrawn: currentWithdrawn + amount,
+        incomeItems: selectedMonthly.incomeItems ?? [],
         expenseItems: selectedMonthly.expenseItems ?? [],
         withdrawItems: [
           ...(selectedMonthly.withdrawItems ?? []),
@@ -358,6 +425,135 @@ export default function MonthlyFlowPage() {
         setErrorMessage(error.message);
       } else {
         setErrorMessage("Unable to add withdraw entry.");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleRemoveIncomeEntry(entryId: string) {
+    const target = (selectedMonthly.incomeItems ?? []).find(
+      (item) => item.id === entryId,
+    );
+
+    if (!target) {
+      return;
+    }
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSaving(true);
+
+    try {
+      const currentIncome = parseNonNegativeAmount(form.income);
+      await saveSelectedMonth({
+        income: Math.max(0, currentIncome - target.amount),
+        expense: parseNonNegativeAmount(form.expense),
+        manualSaved: parseNonNegativeAmount(form.manualSaved),
+        manualWithdrawn: parseNonNegativeAmount(form.manualWithdrawn),
+        incomeItems: (selectedMonthly.incomeItems ?? []).filter(
+          (item) => item.id !== entryId,
+        ),
+        expenseItems: selectedMonthly.expenseItems ?? [],
+        withdrawItems: selectedMonthly.withdrawItems ?? [],
+      });
+
+      setForm((previous) => ({
+        ...previous,
+        income: String(Math.max(0, currentIncome - target.amount)),
+      }));
+      setSuccessMessage("Income entry removed.");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to remove income entry.");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleRemoveExpenseEntry(entryId: string) {
+    const target = (selectedMonthly.expenseItems ?? []).find(
+      (item) => item.id === entryId,
+    );
+
+    if (!target) {
+      return;
+    }
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSaving(true);
+
+    try {
+      const currentExpense = parseNonNegativeAmount(form.expense);
+      await saveSelectedMonth({
+        income: parseNonNegativeAmount(form.income),
+        expense: Math.max(0, currentExpense - target.amount),
+        manualSaved: parseNonNegativeAmount(form.manualSaved),
+        manualWithdrawn: parseNonNegativeAmount(form.manualWithdrawn),
+        incomeItems: selectedMonthly.incomeItems ?? [],
+        expenseItems: (selectedMonthly.expenseItems ?? []).filter(
+          (item) => item.id !== entryId,
+        ),
+        withdrawItems: selectedMonthly.withdrawItems ?? [],
+      });
+
+      setForm((previous) => ({
+        ...previous,
+        expense: String(Math.max(0, currentExpense - target.amount)),
+      }));
+      setSuccessMessage("Expense entry removed.");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to remove expense entry.");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleRemoveWithdrawEntry(entryId: string) {
+    const target = (selectedMonthly.withdrawItems ?? []).find(
+      (item) => item.id === entryId,
+    );
+
+    if (!target) {
+      return;
+    }
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSaving(true);
+
+    try {
+      const currentWithdrawn = parseNonNegativeAmount(form.manualWithdrawn);
+      await saveSelectedMonth({
+        income: parseNonNegativeAmount(form.income),
+        expense: parseNonNegativeAmount(form.expense),
+        manualSaved: parseNonNegativeAmount(form.manualSaved),
+        manualWithdrawn: Math.max(0, currentWithdrawn - target.amount),
+        incomeItems: selectedMonthly.incomeItems ?? [],
+        expenseItems: selectedMonthly.expenseItems ?? [],
+        withdrawItems: (selectedMonthly.withdrawItems ?? []).filter(
+          (item) => item.id !== entryId,
+        ),
+      });
+
+      setForm((previous) => ({
+        ...previous,
+        manualWithdrawn: String(Math.max(0, currentWithdrawn - target.amount)),
+      }));
+      setSuccessMessage("Withdraw entry removed.");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to remove withdraw entry.");
       }
     } finally {
       setIsSaving(false);
@@ -680,12 +876,47 @@ export default function MonthlyFlowPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="space-y-4">
+              <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+                <p className="text-sm font-semibold text-foreground">
+                  Add income entry
+                </p>
+                <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
+                  <Input
+                    id="monthly-income-entry-amount-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder="Amount"
+                    value={newIncomeAmount}
+                    onChange={(event) => setNewIncomeAmount(event.target.value)}
+                  />
+                  <Input
+                    id="monthly-income-entry-reason-input"
+                    placeholder="Source (for example: Salary, Freelance, Bonus)"
+                    value={newIncomeDescription}
+                    onChange={(event) =>
+                      setNewIncomeDescription(event.target.value)
+                    }
+                  />
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="rounded-xl md:min-w-32"
+                    onClick={handleAddIncomeEntry}
+                    disabled={!canAddIncomeEntry}
+                  >
+                    {isSaving ? "Adding..." : "Add income"}
+                  </Button>
+                </div>
+              </div>
+
               <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
                 <p className="text-sm font-semibold text-foreground">
                   Add expense entry
                 </p>
-                <div className="grid gap-3">
+                <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
                   <Input
                     id="monthly-expense-entry-amount-input"
                     type="number"
@@ -709,7 +940,7 @@ export default function MonthlyFlowPage() {
                   <Button
                     size="lg"
                     variant="secondary"
-                    className="rounded-xl"
+                    className="rounded-xl md:min-w-32"
                     onClick={handleAddExpenseEntry}
                     disabled={!canAddExpenseEntry}
                   >
@@ -722,7 +953,7 @@ export default function MonthlyFlowPage() {
                 <p className="text-sm font-semibold text-foreground">
                   Add withdraw entry
                 </p>
-                <div className="grid gap-3">
+                <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
                   <Input
                     id="monthly-withdraw-entry-amount-input"
                     type="number"
@@ -746,7 +977,7 @@ export default function MonthlyFlowPage() {
                   <Button
                     size="lg"
                     variant="secondary"
-                    className="rounded-xl"
+                    className="rounded-xl md:min-w-32"
                     onClick={handleAddWithdrawEntry}
                     disabled={!canAddWithdrawEntry}
                   >
@@ -782,6 +1013,44 @@ export default function MonthlyFlowPage() {
 
             <div className="space-y-2 rounded-xl border border-border/50 bg-background/70 p-4">
               <p className="text-sm font-semibold text-foreground">
+                Income entries ({selectedMonthly.incomeItems?.length ?? 0})
+              </p>
+              {selectedMonthly.incomeItems &&
+              selectedMonthly.incomeItems.length > 0 ? (
+                <ul className="space-y-1.5 text-sm">
+                  {selectedMonthly.incomeItems.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/8 px-3 py-2"
+                    >
+                      <span className="text-foreground">
+                        {item.description}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">
+                          {currencyFormatter.format(item.amount)}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRemoveIncomeEntry(item.id)}
+                          disabled={isSaving}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No income entries in this month yet.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2 rounded-xl border border-border/50 bg-background/70 p-4">
+              <p className="text-sm font-semibold text-foreground">
                 Expense entries ({selectedMonthly.expenseItems?.length ?? 0})
               </p>
               {selectedMonthly.expenseItems &&
@@ -795,9 +1064,19 @@ export default function MonthlyFlowPage() {
                       <span className="text-foreground">
                         {item.description}
                       </span>
-                      <span className="font-medium text-foreground">
-                        {currencyFormatter.format(item.amount)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">
+                          {currencyFormatter.format(item.amount)}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRemoveExpenseEntry(item.id)}
+                          disabled={isSaving}
+                        >
+                          Remove
+                        </Button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -823,9 +1102,19 @@ export default function MonthlyFlowPage() {
                       <span className="text-foreground">
                         {item.description}
                       </span>
-                      <span className="font-medium text-foreground">
-                        {currencyFormatter.format(item.amount)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">
+                          {currencyFormatter.format(item.amount)}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRemoveWithdrawEntry(item.id)}
+                          disabled={isSaving}
+                        >
+                          Remove
+                        </Button>
+                      </div>
                     </li>
                   ))}
                 </ul>

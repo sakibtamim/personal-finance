@@ -26,9 +26,13 @@ export default function CurrentMonthPage() {
     addExpenseCurrent,
     addSavedCurrent,
     addWithdrawCurrent,
+    removeIncomeEntryCurrent,
+    removeExpenseEntryCurrent,
+    removeWithdrawEntryCurrent,
   } = useDashboardFinance();
 
   const [incomeAmount, setIncomeAmount] = useState("0");
+  const [incomeDescription, setIncomeDescription] = useState("");
   const [expenseAmount, setExpenseAmount] = useState("0");
   const [expenseDescription, setExpenseDescription] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("0");
@@ -38,11 +42,13 @@ export default function CurrentMonthPage() {
   const [optimisticExpense, setOptimisticExpense] = useState(0);
   const [optimisticSaved, setOptimisticSaved] = useState(0);
   const [optimisticWithdrawn, setOptimisticWithdrawn] = useState(0);
+  const [isRemovingEntry, setIsRemovingEntry] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const canResetForm =
     incomeAmount !== "0" ||
+    incomeDescription !== "" ||
     expenseAmount !== "0" ||
     expenseDescription !== "" ||
     withdrawAmount !== "0" ||
@@ -95,6 +101,7 @@ export default function CurrentMonthPage() {
   async function handleAction(action: ActionType) {
     setErrorMessage(null);
     setSuccessMessage(null);
+    const trimmedIncomeDescription = incomeDescription.trim();
     const trimmedExpenseDescription = expenseDescription.trim();
 
     const amountValue =
@@ -115,6 +122,11 @@ export default function CurrentMonthPage() {
 
     if (action === "expense" && !trimmedExpenseDescription) {
       setErrorMessage("Enter a short reason for this expense.");
+      return;
+    }
+
+    if (action === "income" && !trimmedIncomeDescription) {
+      setErrorMessage("Enter a short source for this income.");
       return;
     }
 
@@ -141,9 +153,10 @@ export default function CurrentMonthPage() {
 
     try {
       if (action === "income") {
-        await addIncomeCurrent(amount);
+        await addIncomeCurrent(amount, trimmedIncomeDescription);
         setSuccessMessage("Income added to current month.");
         setIncomeAmount("0");
+        setIncomeDescription("");
       }
 
       if (action === "expense") {
@@ -189,10 +202,68 @@ export default function CurrentMonthPage() {
     setErrorMessage(null);
     setSuccessMessage(null);
     setIncomeAmount("0");
+    setIncomeDescription("");
     setExpenseAmount("0");
     setExpenseDescription("");
     setWithdrawAmount("0");
     setWithdrawDescription("");
+  }
+
+  async function handleRemoveIncomeEntry(entryId: string) {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsRemovingEntry(true);
+
+    try {
+      await removeIncomeEntryCurrent(entryId);
+      setSuccessMessage("Income entry removed.");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to remove income entry.");
+      }
+    } finally {
+      setIsRemovingEntry(false);
+    }
+  }
+
+  async function handleRemoveExpenseEntry(entryId: string) {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsRemovingEntry(true);
+
+    try {
+      await removeExpenseEntryCurrent(entryId);
+      setSuccessMessage("Expense entry removed.");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to remove expense entry.");
+      }
+    } finally {
+      setIsRemovingEntry(false);
+    }
+  }
+
+  async function handleRemoveWithdrawEntry(entryId: string) {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsRemovingEntry(true);
+
+    try {
+      await removeWithdrawEntryCurrent(entryId);
+      setSuccessMessage("Withdraw entry removed.");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to remove withdraw entry.");
+      }
+    } finally {
+      setIsRemovingEntry(false);
+    }
   }
 
   return (
@@ -236,7 +307,7 @@ export default function CurrentMonthPage() {
               <p className="text-sm font-semibold text-foreground">
                 Add income
               </p>
-              <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
                 <Input
                   id="quick-income-input"
                   type="number"
@@ -247,11 +318,19 @@ export default function CurrentMonthPage() {
                   value={incomeAmount}
                   onChange={(event) => setIncomeAmount(event.target.value)}
                 />
+                <Input
+                  id="quick-income-description-input"
+                  placeholder="Source (for example: Salary, Freelance, Bonus)"
+                  value={incomeDescription}
+                  onChange={(event) => setIncomeDescription(event.target.value)}
+                />
                 <Button
                   size="lg"
                   className="rounded-xl md:min-w-32"
                   onClick={() => handleAction("income")}
-                  disabled={!canSubmitIncome}
+                  disabled={
+                    !canSubmitIncome || incomeDescription.trim().length === 0
+                  }
                 >
                   {pendingAction === "income" ? "Adding..." : "Add income"}
                 </Button>
@@ -339,7 +418,9 @@ export default function CurrentMonthPage() {
                 variant="outline"
                 className="rounded-xl"
                 onClick={handleResetForm}
-                disabled={!canResetForm || pendingAction !== null}
+                disabled={
+                  !canResetForm || pendingAction !== null || isRemovingEntry
+                }
               >
                 Reset
               </Button>
@@ -348,7 +429,7 @@ export default function CurrentMonthPage() {
                 variant="outline"
                 className="rounded-xl"
                 onClick={() => handleAction("save")}
-                disabled={!canSubmitIncome}
+                disabled={!canSubmitIncome || isRemovingEntry}
               >
                 {pendingAction === "save" ? "Saving..." : "Save"}
               </Button>
@@ -369,6 +450,44 @@ export default function CurrentMonthPage() {
             <div className="space-y-4 rounded-xl border border-border/50 bg-background/70 p-4">
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-foreground">
+                  Income entries ({currentMonthly.incomeItems?.length ?? 0})
+                </p>
+                {currentMonthly.incomeItems &&
+                currentMonthly.incomeItems.length > 0 ? (
+                  <ul className="space-y-1.5 text-sm">
+                    {currentMonthly.incomeItems.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/8 px-3 py-2"
+                      >
+                        <span className="text-foreground">
+                          {item.description}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">
+                            {currencyFormatter.format(item.amount)}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRemoveIncomeEntry(item.id)}
+                            disabled={pendingAction !== null || isRemovingEntry}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No income entries yet.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-foreground">
                   Expense entries ({currentMonthly.expenseItems?.length ?? 0})
                 </p>
                 {currentMonthly.expenseItems &&
@@ -382,9 +501,19 @@ export default function CurrentMonthPage() {
                         <span className="text-foreground">
                           {item.description}
                         </span>
-                        <span className="font-medium text-foreground">
-                          {currencyFormatter.format(item.amount)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">
+                            {currencyFormatter.format(item.amount)}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRemoveExpenseEntry(item.id)}
+                            disabled={pendingAction !== null || isRemovingEntry}
+                          >
+                            Remove
+                          </Button>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -410,9 +539,19 @@ export default function CurrentMonthPage() {
                         <span className="text-foreground">
                           {item.description}
                         </span>
-                        <span className="font-medium text-foreground">
-                          {currencyFormatter.format(item.amount)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">
+                            {currencyFormatter.format(item.amount)}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRemoveWithdrawEntry(item.id)}
+                            disabled={pendingAction !== null || isRemovingEntry}
+                          >
+                            Remove
+                          </Button>
+                        </div>
                       </li>
                     ))}
                   </ul>

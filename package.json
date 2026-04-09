@@ -11,7 +11,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "predeploy:check": "pnpm lint && pnpm test:run && pnpm build",
-    "firebase:login": "pnpm dlx firebase-tools login",
+    "firebase:login": "pnpm dlx firebase-tools login --no-localhost --reauth",
     "firebase:use": "pnpm dlx firebase-tools use personal-finance-17ca1",
     "firestore:deploy": "pnpm dlx firebase-tools deploy --only firestore:rules,firestore:indexes",
     "deploy:vercel": "pnpm dlx vercel --prod"

@@ -41,6 +41,7 @@ service cloud.firestore {
             "expense",
             "manualSaved",
             "manualWithdrawn",
+            "incomeItems",
             "expenseItems",
             "withdrawItems",
             "updatedAt"
@@ -49,6 +50,7 @@ service cloud.firestore {
           && isValidMoney(request.resource.data.expense)
           && isValidMoney(request.resource.data.manualSaved)
           && isValidMoney(request.resource.data.manualWithdrawn)
+          && isValidEntryItems(request.resource.data.incomeItems)
           && isValidEntryItems(request.resource.data.expenseItems)
           && isValidEntryItems(request.resource.data.withdrawItems);
         allow delete: if isOwner(uid);

@@ -25,6 +25,12 @@ pnpm firebase:use
 pnpm firestore:deploy
 ```
 
+If browser callback login fails, run:
+
+```bash
+pnpm dlx firebase-tools login --no-localhost --reauth
+```
+
 ## 3. Vercel environment variables
 
 Add these variables in your Vercel project settings for Production and Preview:

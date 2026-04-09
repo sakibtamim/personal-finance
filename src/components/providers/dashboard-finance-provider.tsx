@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import {
+  applyIncomeEntry,
   applyExpenseWithSpendingRule,
   applyWithdrawWithSavingsRule,
   calculateNetContribution,
@@ -47,10 +48,13 @@ type DashboardFinanceContextValue = {
   monthlyEntries: MonthlyFlowEntry[];
   isLoading: boolean;
   saveSelectedMonth: (values: MonthlyFlow) => Promise<void>;
-  addIncomeCurrent: (amount: number) => Promise<void>;
+  addIncomeCurrent: (amount: number, description: string) => Promise<void>;
   addExpenseCurrent: (amount: number, description: string) => Promise<void>;
   addSavedCurrent: (amount: number) => Promise<void>;
   addWithdrawCurrent: (amount: number, description: string) => Promise<void>;
+  removeIncomeEntryCurrent: (entryId: string) => Promise<void>;
+  removeExpenseEntryCurrent: (entryId: string) => Promise<void>;
+  removeWithdrawEntryCurrent: (entryId: string) => Promise<void>;
 };
 
 const DashboardFinanceContext =
@@ -142,6 +146,18 @@ export function DashboardFinanceProvider({
         expense: clampAmount(values.expense),
         manualSaved: clampAmount(values.manualSaved),
         manualWithdrawn: clampAmount(values.manualWithdrawn),
+        incomeItems: (values.incomeItems ?? [])
+          .map((item) => ({
+            id: item.id,
+            description: item.description.trim(),
+            amount: clampAmount(item.amount),
+          }))
+          .filter(
+            (item) =>
+              item.id.length > 0 &&
+              item.description.length > 0 &&
+              item.amount > 0,
+          ),
         expenseItems: (values.expenseItems ?? [])
           .map((item) => ({
             id: item.id,
@@ -172,7 +188,7 @@ export function DashboardFinanceProvider({
   );
 
   const addIncomeCurrent = useCallback(
-    async (amount: number) => {
+    async (amount: number, description: string) => {
       if (!user) {
         throw new Error("Please sign in to continue.");
       }
@@ -182,10 +198,13 @@ export function DashboardFinanceProvider({
         throw new Error("Income amount must be greater than zero.");
       }
 
-      await upsertMonthlyFlow(user.uid, currentMonthId as MonthId, {
-        ...currentMonthly,
-        income: currentMonthly.income + safeAmount,
-      });
+      await applyIncomeEntry(
+        user.uid,
+        currentMonthId as MonthId,
+        currentMonthly,
+        safeAmount,
+        description,
+      );
     },
     [currentMonthId, currentMonthly, user],
   );
@@ -253,6 +272,84 @@ export function DashboardFinanceProvider({
     [currentMonthId, currentMonthly, user],
   );
 
+  const removeIncomeEntryCurrent = useCallback(
+    async (entryId: string) => {
+      if (!user) {
+        throw new Error("Please sign in to continue.");
+      }
+
+      const target = (currentMonthly.incomeItems ?? []).find(
+        (item) => item.id === entryId,
+      );
+
+      if (!target) {
+        return;
+      }
+
+      await upsertMonthlyFlow(user.uid, currentMonthId as MonthId, {
+        ...currentMonthly,
+        income: Math.max(0, currentMonthly.income - target.amount),
+        incomeItems: (currentMonthly.incomeItems ?? []).filter(
+          (item) => item.id !== entryId,
+        ),
+      });
+    },
+    [currentMonthId, currentMonthly, user],
+  );
+
+  const removeExpenseEntryCurrent = useCallback(
+    async (entryId: string) => {
+      if (!user) {
+        throw new Error("Please sign in to continue.");
+      }
+
+      const target = (currentMonthly.expenseItems ?? []).find(
+        (item) => item.id === entryId,
+      );
+
+      if (!target) {
+        return;
+      }
+
+      await upsertMonthlyFlow(user.uid, currentMonthId as MonthId, {
+        ...currentMonthly,
+        expense: Math.max(0, currentMonthly.expense - target.amount),
+        expenseItems: (currentMonthly.expenseItems ?? []).filter(
+          (item) => item.id !== entryId,
+        ),
+      });
+    },
+    [currentMonthId, currentMonthly, user],
+  );
+
+  const removeWithdrawEntryCurrent = useCallback(
+    async (entryId: string) => {
+      if (!user) {
+        throw new Error("Please sign in to continue.");
+      }
+
+      const target = (currentMonthly.withdrawItems ?? []).find(
+        (item) => item.id === entryId,
+      );
+
+      if (!target) {
+        return;
+      }
+
+      await upsertMonthlyFlow(user.uid, currentMonthId as MonthId, {
+        ...currentMonthly,
+        manualWithdrawn: Math.max(
+          0,
+          currentMonthly.manualWithdrawn - target.amount,
+        ),
+        withdrawItems: (currentMonthly.withdrawItems ?? []).filter(
+          (item) => item.id !== entryId,
+        ),
+      });
+    },
+    [currentMonthId, currentMonthly, user],
+  );
+
   const savingsAtSelectedMonth = useMemo(
     () =>
       allEntries
@@ -294,6 +391,9 @@ export function DashboardFinanceProvider({
       addExpenseCurrent,
       addSavedCurrent,
       addWithdrawCurrent,
+      removeIncomeEntryCurrent,
+      removeExpenseEntryCurrent,
+      removeWithdrawEntryCurrent,
     };
   }, [
     activities,
@@ -302,6 +402,9 @@ export function DashboardFinanceProvider({
     addIncomeCurrent,
     addSavedCurrent,
     addWithdrawCurrent,
+    removeExpenseEntryCurrent,
+    removeIncomeEntryCurrent,
+    removeWithdrawEntryCurrent,
     currentMonthId,
     currentMonthly,
     saveSelectedMonth,
