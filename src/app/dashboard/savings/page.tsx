@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowDownLeft, ArrowUpRight, Landmark } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Landmark, PiggyBank } from "lucide-react";
 import { formatMonthIdLabel } from "@/lib/dashboard/view-utils";
 import { useSettingsStore } from "@/store/use-settings-store";
 
@@ -103,7 +103,7 @@ export default function SavingsPage() {
         title="Savings"
         description="Track total savings performance and inspect month-wise save and withdrawal movement with focused filters."
         actions={
-          <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-primary">
+          <span className="inline-flex items-center rounded-full border border-emerald-500/35 bg-emerald-500/12 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-emerald-700 dark:text-emerald-300">
             Trend view
           </span>
         }
@@ -114,21 +114,27 @@ export default function SavingsPage() {
             value={currencyFormatter.format(totalSavings)}
             hint="All-time cumulative balance"
             className="sm:col-span-2"
+            icon={PiggyBank}
+            tone="emerald"
           />
           <DashboardStatCard
             label="Filtered saved"
             value={currencyFormatter.format(filteredSavedTotal)}
             hint="Saved in active filter"
+            icon={ArrowUpRight}
+            tone="primary"
           />
           <DashboardStatCard
             label="Filtered withdrawn"
             value={currencyFormatter.format(filteredWithdrawnTotal)}
             hint="Withdrawn in active filter"
+            icon={ArrowDownLeft}
+            tone="rose"
           />
         </div>
 
-        <div className="grid gap-3 rounded-2xl border border-border/60 bg-background/75 p-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-border/60 bg-card/70 p-3">
+        <div className="grid gap-3 rounded-2xl border border-emerald-500/25 bg-linear-to-br from-emerald-500/10 to-teal-500/8 p-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-emerald-500/25 bg-linear-to-br from-emerald-500/12 to-card/80 p-3">
             <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               <Landmark className="size-3.5" />
               Activity months
@@ -137,7 +143,7 @@ export default function SavingsPage() {
               {filteredMonthRows.length}
             </p>
           </div>
-          <div className="rounded-xl border border-border/60 bg-card/70 p-3">
+          <div className="rounded-xl border border-cyan-500/25 bg-linear-to-br from-cyan-500/10 to-card/80 p-3">
             <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               <ArrowUpRight className="size-3.5" />
               Saved volume
@@ -146,7 +152,7 @@ export default function SavingsPage() {
               {currencyFormatter.format(filteredSavedTotal)}
             </p>
           </div>
-          <div className="rounded-xl border border-border/60 bg-card/70 p-3">
+          <div className="rounded-xl border border-amber-500/25 bg-linear-to-br from-amber-500/10 to-card/80 p-3">
             <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               <ArrowDownLeft className="size-3.5" />
               Net movement
@@ -278,7 +284,7 @@ export default function SavingsPage() {
           </div>
         ) : null}
 
-        <Card className="animate-rise-fade-delay-2 rounded-3xl border-border/60 bg-card/90 shadow-sm">
+        <Card className="animate-rise-fade-delay-2 rounded-3xl border-emerald-500/25 bg-linear-to-br from-emerald-500/8 via-card/92 to-cyan-500/8 shadow-sm">
           <CardContent className="p-3 md:p-0">
             <div className="space-y-2 md:hidden">
               {hasNoRows || hasNoFilteredRows ? (

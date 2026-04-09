@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Moon, Sun } from "lucide-react";
+import { Banknote, Moon, Palette, Sun } from "lucide-react";
 
 import { DashboardAuthGate } from "@/components/dashboard/dashboard-auth-gate";
 import { DashboardSection } from "@/components/layout/dashboard-section";
@@ -92,7 +92,7 @@ export default function SettingsPage() {
         title="Settings"
         description="Configure global preferences such as currency and light or dark theme."
         actions={
-          <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-primary">
+          <span className="inline-flex items-center rounded-full border border-cyan-500/35 bg-cyan-500/12 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-cyan-700 dark:text-cyan-300">
             Preferences
           </span>
         }
@@ -102,16 +102,20 @@ export default function SettingsPage() {
             label="Currency"
             value={currency}
             hint="Used across dashboard summaries"
+            icon={Banknote}
+            tone="primary"
           />
           <DashboardStatCard
             label="Theme"
             value={theme === "light" ? "Light" : "Dark"}
             hint="Persisted per account"
+            icon={Palette}
+            tone="indigo"
           />
         </div>
 
         <div className="animate-rise-fade-delay-2 grid gap-4 lg:grid-cols-2">
-          <Card className="rounded-3xl border-border/60 bg-card/90 shadow-sm">
+          <Card className="rounded-3xl border-cyan-500/25 bg-linear-to-br from-cyan-500/10 to-card/90 shadow-sm">
             <CardContent className="space-y-3 p-5 md:p-6">
               <p className="text-sm font-semibold text-foreground">Currency</p>
               <Label
@@ -141,7 +145,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-3xl border-border/60 bg-card/90 shadow-sm">
+          <Card className="rounded-3xl border-indigo-500/25 bg-linear-to-br from-indigo-500/10 to-card/90 shadow-sm">
             <CardContent className="space-y-4 p-5 md:p-6">
               <p className="text-sm font-semibold text-foreground">Theme</p>
               <p className="text-sm text-muted-foreground">

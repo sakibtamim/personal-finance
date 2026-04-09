@@ -9,7 +9,14 @@ import { useDashboardFinance } from "@/components/providers/dashboard-finance-pr
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { CalendarCheck2, HandCoins, PiggyBank, Wallet } from "lucide-react";
+import {
+  CalendarCheck2,
+  HandCoins,
+  PiggyBank,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import {
   isPositiveAmount,
   parseNonNegativeAmount,
@@ -273,7 +280,7 @@ export default function CurrentMonthPage() {
         title="Current Month"
         description="Control day-to-day cashflow with quick actions and instant visibility into your working month."
         actions={
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-primary">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/35 bg-cyan-500/12 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-cyan-700 dark:text-cyan-300">
             <CalendarCheck2 className="size-3.5" />
             Live month workspace
           </span>
@@ -285,21 +292,29 @@ export default function CurrentMonthPage() {
             value={currentMonthId}
             hint="Your primary month for daily transactions"
             className="sm:col-span-2"
+            icon={CalendarCheck2}
+            tone="indigo"
           />
           <DashboardStatCard
             label="Remaining"
             value={currencyFormatter.format(optimisticRemaining)}
             hint="Income minus expense"
+            icon={Wallet}
+            tone="primary"
           />
           <DashboardStatCard
             label="Savings used"
             value={currencyFormatter.format(optimisticMonthly.manualWithdrawn)}
             hint="Manual withdrawals this month"
+            icon={TrendingDown}
+            tone="rose"
           />
           <DashboardStatCard
             label="Saved this month"
             value={currencyFormatter.format(optimisticMonthly.manualSaved)}
             hint="Manual savings contribution"
+            icon={TrendingUp}
+            tone="emerald"
           />
         </div>
 
@@ -310,10 +325,10 @@ export default function CurrentMonthPage() {
           </div>
         ) : null}
 
-        <Card className="animate-rise-fade-delay-2 rounded-3xl border border-border/60 bg-card/90 shadow-sm">
+        <Card className="animate-rise-fade-delay-2 rounded-3xl border border-cyan-500/25 bg-linear-to-br from-cyan-500/10 via-card/92 to-indigo-500/8 shadow-sm">
           <div className="space-y-6 p-5 md:p-7">
             <div className="space-y-4">
-              <div className="space-y-3 rounded-2xl border border-border/60 bg-background/75 p-4">
+              <div className="space-y-3 rounded-2xl border border-emerald-500/30 bg-linear-to-br from-emerald-500/8 to-background/80 p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <Wallet className="size-4 text-primary" />
                   Add income
@@ -350,7 +365,7 @@ export default function CurrentMonthPage() {
                 </div>
               </div>
 
-              <div className="space-y-3 rounded-2xl border border-border/60 bg-background/75 p-4">
+              <div className="space-y-3 rounded-2xl border border-rose-500/30 bg-linear-to-br from-rose-500/10 to-background/80 p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <HandCoins className="size-4 text-rose-500" />
                   Add expense entry
@@ -390,7 +405,7 @@ export default function CurrentMonthPage() {
               </div>
             </div>
 
-            <div className="space-y-3 rounded-2xl border border-border/60 bg-background/75 p-4">
+            <div className="space-y-3 rounded-2xl border border-amber-500/30 bg-linear-to-br from-amber-500/12 to-background/80 p-4">
               <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <PiggyBank className="size-4 text-amber-500" />
                 Add withdraw entry

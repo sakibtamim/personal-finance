@@ -8,7 +8,7 @@ import { DashboardSection } from "@/components/layout/dashboard-section";
 import { Button } from "@/components/ui/button";
 import { DashboardStatCard } from "@/components/layout/dashboard-stat-card";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, ShieldCheck, UserCircle2 } from "lucide-react";
+import { IdCard, Mail, ShieldCheck, UserCircle2 } from "lucide-react";
 import { signOutUser } from "@/lib/firebase/auth";
 import { useAuthStore } from "@/store/use-auth-store";
 
@@ -58,7 +58,7 @@ export default function ProfilePage() {
         title="Profile"
         description="Review account identity, login method, and security status in one place."
         actions={
-          <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-primary">
+          <span className="inline-flex items-center rounded-full border border-indigo-500/35 bg-indigo-500/12 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-indigo-700 dark:text-indigo-300">
             Secure account
           </span>
         }
@@ -68,20 +68,26 @@ export default function ProfilePage() {
             label="Account"
             value={getAccountType(user?.email ?? null)}
             hint="Primary sign-in method"
+            icon={IdCard}
+            tone="indigo"
           />
           <DashboardStatCard
             label="Status"
             value="Verified"
             hint="Authentication is active"
+            icon={ShieldCheck}
+            tone="emerald"
           />
           <DashboardStatCard
             label="Plan"
             value="Personal"
             hint="Single user workspace"
+            icon={Mail}
+            tone="amber"
           />
         </div>
 
-        <Card className="animate-rise-fade-delay-2 rounded-3xl border-border/60 bg-card/90 shadow-sm">
+        <Card className="animate-rise-fade-delay-2 rounded-3xl border-indigo-500/25 bg-linear-to-br from-indigo-500/10 via-card/92 to-amber-500/8 shadow-sm">
           <CardContent className="space-y-5 p-5 md:p-6">
             <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-border/60 bg-background/75 p-4">
               <div className="flex items-center gap-3">

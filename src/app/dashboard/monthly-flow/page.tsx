@@ -10,7 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  HandCoins,
+  Landmark,
+  TrendingDown,
+  Wallet,
+} from "lucide-react";
 import {
   isNonNegativeAmount,
   parseNonNegativeAmount,
@@ -591,12 +599,12 @@ export default function MonthlyFlowPage() {
         title="Monthly Flow"
         description="Review any month, adjust totals, and maintain a clean ledger timeline with faster controls."
         actions={
-          <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-primary">
+          <span className="inline-flex items-center rounded-full border border-violet-500/35 bg-violet-500/12 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-violet-700 dark:text-violet-300">
             Ledger mode
           </span>
         }
       >
-        <Card className="animate-rise-fade-delay-1 rounded-3xl border border-border/60 bg-card/90 shadow-sm">
+        <Card className="animate-rise-fade-delay-1 rounded-3xl border border-indigo-500/25 bg-linear-to-br from-indigo-500/10 via-card/92 to-violet-500/10 shadow-sm">
           <CardContent className="space-y-5 p-4 md:p-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-2">
@@ -745,23 +753,31 @@ export default function MonthlyFlowPage() {
           <DashboardStatCard
             label="Income"
             value={currencyFormatter.format(selectedMonthly.income)}
+            icon={Landmark}
+            tone="emerald"
           />
           <DashboardStatCard
             label="Expense"
             value={currencyFormatter.format(selectedMonthly.expense)}
+            icon={HandCoins}
+            tone="rose"
           />
           <DashboardStatCard
             label="Remaining"
             value={currencyFormatter.format(remainingSelected)}
+            icon={Wallet}
+            tone="primary"
           />
           <DashboardStatCard
             label={savingsCard.label}
             value={currencyFormatter.format(savingsCard.value)}
             hint={savingsCard.hint}
+            icon={TrendingDown}
+            tone="amber"
           />
         </div>
 
-        <Card className="animate-rise-fade-delay-2 rounded-3xl border border-border/60 bg-card/90 shadow-sm">
+        <Card className="animate-rise-fade-delay-2 rounded-3xl border border-violet-500/25 bg-linear-to-br from-violet-500/10 via-card/92 to-indigo-500/10 shadow-sm">
           <CardContent className="space-y-5 p-5 md:p-6">
             <div className="space-y-4 rounded-2xl border border-border/60 bg-background/75 p-5 md:p-6">
               <p className="text-base font-semibold text-foreground">
