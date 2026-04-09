@@ -32,6 +32,7 @@ export default function MonthlyFlowPage() {
     setSelectedMonthId,
     selectedMonthly,
     remainingSelected,
+    totalSavings,
     savingsAtSelectedMonth,
     saveSelectedMonth,
   } = useDashboardFinance();
@@ -98,6 +99,50 @@ export default function MonthlyFlowPage() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   }, []);
+
+  const selectedMonthStatus = useMemo<"current" | "past" | "future">(() => {
+    if (selectedMonthId === currentMonthId) {
+      return "current";
+    }
+
+    return selectedMonthId < currentMonthId ? "past" : "future";
+  }, [currentMonthId, selectedMonthId]);
+
+  const monthStatusText = useMemo(() => {
+    if (selectedMonthStatus === "current") {
+      return "Current month";
+    }
+
+    if (selectedMonthStatus === "past") {
+      return "Past month";
+    }
+
+    return "Future month";
+  }, [selectedMonthStatus]);
+
+  const savingsCard = useMemo(() => {
+    if (selectedMonthStatus === "current") {
+      return {
+        label: "Savings",
+        value: totalSavings,
+        hint: "Current overall savings balance",
+      };
+    }
+
+    if (selectedMonthStatus === "future") {
+      return {
+        label: "Savings",
+        value: savingsAtSelectedMonth,
+        hint: "Projected from saved records up to selected month",
+      };
+    }
+
+    return {
+      label: "Savings",
+      value: savingsAtSelectedMonth,
+      hint: "Savings accumulated by selected month",
+    };
+  }, [savingsAtSelectedMonth, selectedMonthStatus, totalSavings]);
 
   const isFormValid = useMemo(
     () =>
@@ -324,89 +369,123 @@ export default function MonthlyFlowPage() {
     setSelectedMonthId(`${selectedYear}-${nextMonth}`);
   }
 
+  function handleNativeMonthChange(value: string) {
+    if (!value) {
+      return;
+    }
+
+    const [yearText, monthText] = value.split("-");
+    const year = Number(yearText);
+    const month = Number(monthText);
+
+    if (!Number.isInteger(year) || !Number.isInteger(month)) {
+      return;
+    }
+
+    if (month < 1 || month > 12) {
+      return;
+    }
+
+    setSelectedMonthId(`${year}-${String(month).padStart(2, "0")}`);
+  }
+
   return (
     <DashboardAuthGate>
       <DashboardSection
         title="Monthly Flow"
-        description="Review any past or current month and manually update values for historical records."
+        description="Switch months quickly, review month totals, and edit one month ledger at a time."
         actions={
           <span className="rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
             Monthly ledger mode
           </span>
         }
       >
-        <div className="rounded-2xl border border-border/50 bg-background/70 p-4 shadow-sm">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <Card className="rounded-2xl border border-border/60 bg-card/95 shadow-sm">
+          <CardContent className="space-y-5 p-4 md:p-5">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                    Month filter
+                  <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/30 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    {monthStatusText}
                   </span>
-                  <span className="text-sm text-muted-foreground">
-                    Pick a month using compact dashboard controls.
+                  <span className="text-xs text-muted-foreground">
+                    Selected month updates all stats and adjustment inputs
+                    below.
                   </span>
                 </div>
-                <div className="space-y-1">
-                  <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-foreground">
-                    <CalendarDays className="size-4 text-muted-foreground" />
-                    {selectedMonthLabel}
-                  </h2>
-                </div>
+                <h2 className="flex items-center gap-2 text-[1.75rem] font-semibold tracking-tight text-foreground md:text-[2rem]">
+                  <CalendarDays className="size-5 text-muted-foreground" />
+                  {selectedMonthLabel}
+                </h2>
               </div>
 
-              <div className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card/80 p-1 shadow-sm transition-colors duration-200">
-                <Button
-                  size="icon-sm"
-                  variant="outline"
-                  className="rounded-xl"
-                  onClick={() =>
-                    setSelectedMonthId(shiftMonth(selectedMonthId, -1))
-                  }
-                  disabled={isSaving}
-                  aria-label="Previous month"
-                >
-                  <ChevronLeft />
-                </Button>
-                <Button
-                  size="icon-sm"
-                  variant="outline"
-                  className="rounded-xl"
-                  onClick={() =>
-                    setSelectedMonthId(shiftMonth(selectedMonthId, 1))
-                  }
-                  disabled={isSaving}
-                  aria-label="Next month"
-                >
-                  <ChevronRight />
-                </Button>
+              <div className="grid gap-2 sm:grid-cols-[auto_auto_auto] sm:items-end">
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="monthly-flow-native-month-input"
+                    className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
+                  >
+                    Direct month
+                  </Label>
+                  <Input
+                    id="monthly-flow-native-month-input"
+                    type="month"
+                    value={selectedMonthId}
+                    onChange={(event) =>
+                      handleNativeMonthChange(event.target.value)
+                    }
+                    className="h-9"
+                    disabled={isSaving}
+                  />
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-background/70 p-1">
+                  <Button
+                    size="icon-sm"
+                    variant="outline"
+                    className="rounded-lg"
+                    onClick={() =>
+                      setSelectedMonthId(shiftMonth(selectedMonthId, -1))
+                    }
+                    disabled={isSaving}
+                    aria-label="Previous month"
+                  >
+                    <ChevronLeft />
+                  </Button>
+                  <Button
+                    size="icon-sm"
+                    variant="outline"
+                    className="rounded-lg"
+                    onClick={() =>
+                      setSelectedMonthId(shiftMonth(selectedMonthId, 1))
+                    }
+                    disabled={isSaving}
+                    aria-label="Next month"
+                  >
+                    <ChevronRight />
+                  </Button>
+                </div>
                 <Button
                   size="sm"
                   variant="secondary"
-                  className="rounded-xl px-3"
+                  className="h-9 rounded-lg px-3"
                   onClick={() => setSelectedMonthId(currentMonthId)}
-                  disabled={isSaving}
+                  disabled={isSaving || selectedMonthId === currentMonthId}
                 >
-                  This month
+                  Go to current month
                 </Button>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/50 bg-card/80 p-4 shadow-sm transition-colors duration-200">
-              <div className="flex items-center justify-between gap-3 border-b border-border/50 pb-3">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    Select month
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Choose a period within {selectedYear}.
-                  </p>
-                </div>
-                <div className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 p-1">
+            <div className="rounded-xl border border-border/60 bg-background/70 p-3 md:p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground">
+                  Jump inside {selectedYear}
+                </p>
+                <div className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
                   <Button
                     size="icon-sm"
                     variant="ghost"
-                    className="rounded-full"
+                    className="rounded-md"
                     onClick={() =>
                       setSelectedMonthId(shiftMonth(selectedMonthId, -12))
                     }
@@ -415,13 +494,13 @@ export default function MonthlyFlowPage() {
                   >
                     <ChevronLeft />
                   </Button>
-                  <span className="min-w-14 px-1 text-center text-sm font-medium text-foreground">
+                  <span className="min-w-16 px-1 text-center text-sm font-medium text-foreground">
                     {selectedYear}
                   </span>
                   <Button
                     size="icon-sm"
                     variant="ghost"
-                    className="rounded-full"
+                    className="rounded-md"
                     onClick={() =>
                       setSelectedMonthId(shiftMonth(selectedMonthId, 12))
                     }
@@ -432,8 +511,7 @@ export default function MonthlyFlowPage() {
                   </Button>
                 </div>
               </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12">
+              <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12">
                 {monthLabels.map((label, index) => {
                   const isActive = index === selectedMonthIndex;
 
@@ -442,9 +520,9 @@ export default function MonthlyFlowPage() {
                       key={label}
                       size="sm"
                       variant={isActive ? "default" : "outline"}
-                      className={`rounded-xl px-3 py-5 text-sm font-medium transition-all duration-200 ${
+                      className={`h-9 rounded-lg px-2.5 text-sm transition-colors ${
                         isActive
-                          ? "ring-1 ring-primary/40 shadow-sm shadow-primary/25"
+                          ? "shadow-sm"
                           : "hover:border-primary/30 hover:bg-muted/60"
                       }`}
                       onClick={() => selectMonth(index)}
@@ -456,21 +534,9 @@ export default function MonthlyFlowPage() {
                   );
                 })}
               </div>
-
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-3">
-                <p className="text-sm text-muted-foreground">
-                  Active month:{" "}
-                  <span className="font-medium text-foreground">
-                    {selectedMonthLabel}
-                  </span>
-                </p>
-                <span className="rounded-full border border-border/60 bg-muted/30 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                  Tap month chip to switch
-                </span>
-              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {hasNoMonthlyData ? (
           <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-3 text-sm text-muted-foreground">
@@ -493,26 +559,26 @@ export default function MonthlyFlowPage() {
             value={currencyFormatter.format(remainingSelected)}
           />
           <DashboardStatCard
-            label="Savings"
-            value={currencyFormatter.format(savingsAtSelectedMonth)}
-            hint="Savings accumulated by selected month"
+            label={savingsCard.label}
+            value={currencyFormatter.format(savingsCard.value)}
+            hint={savingsCard.hint}
           />
         </div>
 
         <Card className="rounded-xl border border-border/50 bg-card shadow-sm">
           <CardContent className="space-y-5 p-5 md:p-6">
-            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
-              <p className="text-sm font-semibold text-foreground">
+            <div className="space-y-4 rounded-xl border border-border/60 bg-background/70 p-5 md:p-6">
+              <p className="text-base font-semibold text-foreground">
                 Manual month adjustments
               </p>
-              <p className="text-sm text-muted-foreground">
-                Edit totals directly, or add expense and withdraw entries below.
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Edit totals directly for {selectedMonthLabel}, then save once.
               </p>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="space-y-2">
                   <Label
                     htmlFor="monthly-income-input"
-                    className="text-sm text-muted-foreground"
+                    className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
                   >
                     Income
                   </Label>
@@ -523,6 +589,7 @@ export default function MonthlyFlowPage() {
                     step="0.01"
                     inputMode="decimal"
                     value={form.income}
+                    className="h-10 rounded-lg"
                     onChange={(event) =>
                       setForm((previous) => ({
                         ...previous,
@@ -534,7 +601,7 @@ export default function MonthlyFlowPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="monthly-expense-input"
-                    className="text-sm text-muted-foreground"
+                    className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
                   >
                     Expense total
                   </Label>
@@ -545,6 +612,7 @@ export default function MonthlyFlowPage() {
                     step="0.01"
                     inputMode="decimal"
                     value={form.expense}
+                    className="h-10 rounded-lg"
                     onChange={(event) =>
                       setForm((previous) => ({
                         ...previous,
@@ -556,7 +624,7 @@ export default function MonthlyFlowPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="monthly-save-input"
-                    className="text-sm text-muted-foreground"
+                    className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
                   >
                     Manual save
                   </Label>
@@ -567,6 +635,7 @@ export default function MonthlyFlowPage() {
                     step="0.01"
                     inputMode="decimal"
                     value={form.manualSaved}
+                    className="h-10 rounded-lg"
                     onChange={(event) =>
                       setForm((previous) => ({
                         ...previous,
@@ -578,7 +647,7 @@ export default function MonthlyFlowPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="monthly-withdraw-input"
-                    className="text-sm text-muted-foreground"
+                    className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
                   >
                     Manual withdraw
                   </Label>
@@ -589,6 +658,7 @@ export default function MonthlyFlowPage() {
                     step="0.01"
                     inputMode="decimal"
                     value={form.manualWithdrawn}
+                    className="h-10 rounded-lg"
                     onChange={(event) =>
                       setForm((previous) => ({
                         ...previous,
@@ -598,75 +668,91 @@ export default function MonthlyFlowPage() {
                   />
                 </div>
               </div>
-            </div>
-
-            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
-              <p className="text-sm font-semibold text-foreground">
-                Add expense entry
-              </p>
-              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
-                <Input
-                  id="monthly-expense-entry-amount-input"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
-                  placeholder="Amount"
-                  value={newExpenseAmount}
-                  onChange={(event) => setNewExpenseAmount(event.target.value)}
-                />
-                <Input
-                  id="monthly-expense-entry-reason-input"
-                  placeholder="Reason (for example: Bus fare, Dinner, Snacks)"
-                  value={newExpenseDescription}
-                  onChange={(event) =>
-                    setNewExpenseDescription(event.target.value)
-                  }
-                />
+              <div className="flex justify-end border-t border-border/50 pt-2">
                 <Button
                   size="lg"
-                  variant="secondary"
-                  className="rounded-xl md:min-w-32"
-                  onClick={handleAddExpenseEntry}
-                  disabled={!canAddExpenseEntry}
+                  className="h-10 rounded-lg px-5"
+                  onClick={handleSave}
+                  disabled={isSaving || !isFormValid}
                 >
-                  {isSaving ? "Adding..." : "Add expense"}
+                  {isSaving ? "Updating totals..." : "Update totals"}
                 </Button>
               </div>
             </div>
 
-            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
-              <p className="text-sm font-semibold text-foreground">
-                Add withdraw entry
-              </p>
-              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
-                <Input
-                  id="monthly-withdraw-entry-amount-input"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputMode="decimal"
-                  placeholder="Amount"
-                  value={newWithdrawAmount}
-                  onChange={(event) => setNewWithdrawAmount(event.target.value)}
-                />
-                <Input
-                  id="monthly-withdraw-entry-reason-input"
-                  placeholder="Reason (for example: Family support, Emergency, Transfer)"
-                  value={newWithdrawDescription}
-                  onChange={(event) =>
-                    setNewWithdrawDescription(event.target.value)
-                  }
-                />
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  className="rounded-xl md:min-w-32"
-                  onClick={handleAddWithdrawEntry}
-                  disabled={!canAddWithdrawEntry}
-                >
-                  {isSaving ? "Adding..." : "Add withdraw"}
-                </Button>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+                <p className="text-sm font-semibold text-foreground">
+                  Add expense entry
+                </p>
+                <div className="grid gap-3">
+                  <Input
+                    id="monthly-expense-entry-amount-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder="Amount"
+                    value={newExpenseAmount}
+                    onChange={(event) =>
+                      setNewExpenseAmount(event.target.value)
+                    }
+                  />
+                  <Input
+                    id="monthly-expense-entry-reason-input"
+                    placeholder="Reason (for example: Bus fare, Dinner, Snacks)"
+                    value={newExpenseDescription}
+                    onChange={(event) =>
+                      setNewExpenseDescription(event.target.value)
+                    }
+                  />
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="rounded-xl"
+                    onClick={handleAddExpenseEntry}
+                    disabled={!canAddExpenseEntry}
+                  >
+                    {isSaving ? "Adding..." : "Add expense"}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+                <p className="text-sm font-semibold text-foreground">
+                  Add withdraw entry
+                </p>
+                <div className="grid gap-3">
+                  <Input
+                    id="monthly-withdraw-entry-amount-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder="Amount"
+                    value={newWithdrawAmount}
+                    onChange={(event) =>
+                      setNewWithdrawAmount(event.target.value)
+                    }
+                  />
+                  <Input
+                    id="monthly-withdraw-entry-reason-input"
+                    placeholder="Reason (for example: Family support, Emergency, Transfer)"
+                    value={newWithdrawDescription}
+                    onChange={(event) =>
+                      setNewWithdrawDescription(event.target.value)
+                    }
+                  />
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="rounded-xl"
+                    onClick={handleAddWithdrawEntry}
+                    disabled={!canAddWithdrawEntry}
+                  >
+                    {isSaving ? "Adding..." : "Add withdraw"}
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -679,14 +765,6 @@ export default function MonthlyFlowPage() {
                 disabled={isSaving || hasNoMonthlyData}
               >
                 {isSaving ? "Updating month..." : "Clear month data"}
-              </Button>
-              <Button
-                size="lg"
-                className="rounded-xl"
-                onClick={handleSave}
-                disabled={isSaving || !isFormValid}
-              >
-                {isSaving ? "Saving monthly edit..." : "Save monthly edit"}
               </Button>
             </div>
 
