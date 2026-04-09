@@ -49,24 +49,24 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  --background: oklch(0.984 0.005 85.6);
+  --foreground: oklch(0.255 0.02 262.5);
+  --card: oklch(0.996 0.003 95.2);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --primary: oklch(0.53 0.11 199.8);
+  --primary-foreground: oklch(0.985 0.003 95);
+  --secondary: oklch(0.936 0.018 95.4);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --muted: oklch(0.95 0.008 82.9);
+  --muted-foreground: oklch(0.43 0.016 260.5);
+  --accent: oklch(0.95 0.02 191.4);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.89 0.01 84.7);
+  --input: oklch(0.89 0.01 84.7);
+  --ring: oklch(0.66 0.08 205.5);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -117,12 +117,57 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@layer utilities {
+  @keyframes rise-fade {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-rise-fade {
+    animation: rise-fade 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-rise-fade-delay-1 {
+    animation: rise-fade 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-rise-fade-delay-2 {
+    animation: rise-fade 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-rise-fade,
+    .animate-rise-fade-delay-1,
+    .animate-rise-fade-delay-2 {
+      animation: none;
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(
+        circle at 10% 0%,
+        color-mix(in oklab, var(--primary) 16%, transparent) 0%,
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 90% 100%,
+        color-mix(in oklab, var(--accent) 22%, transparent) 0%,
+        transparent 42%
+      );
+    background-attachment: fixed;
   }
   html {
     @apply font-sans;

@@ -14,9 +14,9 @@ export function DashboardTopbar() {
   const { currentMonthId } = useDashboardFinance();
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border/50 bg-background/90 px-4 py-3 backdrop-blur md:px-10">
+    <header className="animate-rise-fade sticky top-0 z-20 border-b border-border/60 bg-background/85 px-4 py-3 backdrop-blur md:px-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 rounded-xl border border-border/50 bg-card px-3 py-2 text-sm shadow-sm">
+        <div className="flex items-center gap-2.5 rounded-2xl border border-border/60 bg-card/85 px-3.5 py-2 text-sm shadow-sm">
           <CalendarDays
             className="size-4 text-muted-foreground"
             aria-hidden="true"
@@ -28,7 +28,7 @@ export function DashboardTopbar() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button asChild size="lg" className="rounded-xl">
+          <Button asChild size="lg" className="rounded-xl shadow-sm">
             <Link
               href="/dashboard/current-month"
               className="flex items-center gap-1.5 leading-none"
@@ -54,7 +54,7 @@ export function DashboardTopbar() {
               size="sm"
               variant={isActive ? "secondary" : "ghost"}
               className={cn(
-                "rounded-lg border border-transparent",
+                "rounded-lg border border-transparent text-foreground",
                 isActive && "border-border bg-secondary font-medium",
               )}
             >

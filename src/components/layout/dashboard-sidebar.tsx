@@ -72,10 +72,10 @@ export function DashboardSidebar() {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-border/50 bg-card/92 px-4 py-6 backdrop-blur md:block">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-border/60 bg-card/88 px-4 py-6 backdrop-blur md:block">
       <div className="flex h-full flex-col">
         <div className="flex items-center gap-2.5 px-2">
-          <span className="relative inline-flex size-9 items-center justify-center overflow-hidden rounded-xl border border-border/50 bg-background shadow-sm">
+          <span className="relative inline-flex size-9 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm">
             <Image
               src="/logo.png"
               alt="Finance Hub"
@@ -121,7 +121,7 @@ export function DashboardSidebar() {
           })}
         </nav>
 
-        <div className="mb-3 flex items-center justify-between rounded-xl border border-border/50 bg-background/70 px-3 py-2">
+        <div className="mb-3 flex items-center justify-between rounded-xl border border-border/60 bg-background/75 px-3 py-2">
           <span className="text-xs text-muted-foreground">Theme</span>
           <Button
             size="icon-sm"

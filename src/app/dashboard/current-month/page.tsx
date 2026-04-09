@@ -9,6 +9,7 @@ import { useDashboardFinance } from "@/components/providers/dashboard-finance-pr
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CalendarCheck2, HandCoins, PiggyBank, Wallet } from "lucide-react";
 import {
   isPositiveAmount,
   parseNonNegativeAmount,
@@ -270,27 +271,35 @@ export default function CurrentMonthPage() {
     <DashboardAuthGate>
       <DashboardSection
         title="Current Month"
-        description="Fast daily workflow for your active working month with quick finance actions."
+        description="Control day-to-day cashflow with quick actions and instant visibility into your working month."
         actions={
-          <span className="rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            Working month mode
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-primary">
+            <CalendarCheck2 className="size-3.5" />
+            Live month workspace
           </span>
         }
       >
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="animate-rise-fade-delay-1 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <DashboardStatCard
             label="Active month"
             value={currentMonthId}
-            hint="Salary can be from previous month and still used here."
+            hint="Your primary month for daily transactions"
             className="sm:col-span-2"
           />
           <DashboardStatCard
             label="Remaining"
             value={currencyFormatter.format(optimisticRemaining)}
+            hint="Income minus expense"
           />
           <DashboardStatCard
             label="Savings used"
             value={currencyFormatter.format(optimisticMonthly.manualWithdrawn)}
+            hint="Manual withdrawals this month"
+          />
+          <DashboardStatCard
+            label="Saved this month"
+            value={currencyFormatter.format(optimisticMonthly.manualSaved)}
+            hint="Manual savings contribution"
           />
         </div>
 
@@ -301,81 +310,89 @@ export default function CurrentMonthPage() {
           </div>
         ) : null}
 
-        <Card className="rounded-xl border border-border/50 bg-card shadow-sm">
-          <div className="space-y-5 p-5 md:p-6">
-            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
-              <p className="text-sm font-semibold text-foreground">
-                Add income
-              </p>
-              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
-                <Input
-                  id="quick-income-input"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="Amount"
-                  inputMode="decimal"
-                  value={incomeAmount}
-                  onChange={(event) => setIncomeAmount(event.target.value)}
-                />
-                <Input
-                  id="quick-income-description-input"
-                  placeholder="Source (for example: Salary, Freelance, Bonus)"
-                  value={incomeDescription}
-                  onChange={(event) => setIncomeDescription(event.target.value)}
-                />
-                <Button
-                  size="lg"
-                  className="rounded-xl md:min-w-32"
-                  onClick={() => handleAction("income")}
-                  disabled={
-                    !canSubmitIncome || incomeDescription.trim().length === 0
-                  }
-                >
-                  {pendingAction === "income" ? "Adding..." : "Add income"}
-                </Button>
+        <Card className="animate-rise-fade-delay-2 rounded-3xl border border-border/60 bg-card/90 shadow-sm">
+          <div className="space-y-6 p-5 md:p-7">
+            <div className="space-y-4">
+              <div className="space-y-3 rounded-2xl border border-border/60 bg-background/75 p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Wallet className="size-4 text-primary" />
+                  Add income
+                </p>
+                <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
+                  <Input
+                    id="quick-income-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Amount"
+                    inputMode="decimal"
+                    value={incomeAmount}
+                    onChange={(event) => setIncomeAmount(event.target.value)}
+                  />
+                  <Input
+                    id="quick-income-description-input"
+                    placeholder="Source (for example: Salary, Freelance, Bonus)"
+                    value={incomeDescription}
+                    onChange={(event) =>
+                      setIncomeDescription(event.target.value)
+                    }
+                  />
+                  <Button
+                    size="lg"
+                    className="rounded-xl md:min-w-32"
+                    onClick={() => handleAction("income")}
+                    disabled={
+                      !canSubmitIncome || incomeDescription.trim().length === 0
+                    }
+                  >
+                    {pendingAction === "income" ? "Adding..." : "Add income"}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-border/60 bg-background/75 p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <HandCoins className="size-4 text-rose-500" />
+                  Add expense entry
+                </p>
+                <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
+                  <Input
+                    id="quick-expense-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Amount"
+                    inputMode="decimal"
+                    value={expenseAmount}
+                    onChange={(event) => setExpenseAmount(event.target.value)}
+                  />
+                  <Input
+                    id="quick-expense-description-input"
+                    placeholder="Reason (for example: Bus fare, Dinner, Snacks)"
+                    value={expenseDescription}
+                    onChange={(event) =>
+                      setExpenseDescription(event.target.value)
+                    }
+                  />
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="rounded-xl border border-border/60 bg-secondary/80 hover:bg-secondary md:min-w-32"
+                    onClick={() => handleAction("expense")}
+                    disabled={
+                      !canSubmitExpense ||
+                      expenseDescription.trim().length === 0
+                    }
+                  >
+                    {pendingAction === "expense" ? "Adding..." : "Add expense"}
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
-              <p className="text-sm font-semibold text-foreground">
-                Add expense entry
-              </p>
-              <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
-                <Input
-                  id="quick-expense-input"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="Amount"
-                  inputMode="decimal"
-                  value={expenseAmount}
-                  onChange={(event) => setExpenseAmount(event.target.value)}
-                />
-                <Input
-                  id="quick-expense-description-input"
-                  placeholder="Reason (for example: Bus fare, Dinner, Snacks)"
-                  value={expenseDescription}
-                  onChange={(event) =>
-                    setExpenseDescription(event.target.value)
-                  }
-                />
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  className="rounded-xl md:min-w-32"
-                  onClick={() => handleAction("expense")}
-                  disabled={
-                    !canSubmitExpense || expenseDescription.trim().length === 0
-                  }
-                >
-                  {pendingAction === "expense" ? "Adding..." : "Add expense"}
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
-              <p className="text-sm font-semibold text-foreground">
+            <div className="space-y-3 rounded-2xl border border-border/60 bg-background/75 p-4">
+              <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <PiggyBank className="size-4 text-amber-500" />
                 Add withdraw entry
               </p>
               <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-end">
@@ -400,7 +417,7 @@ export default function CurrentMonthPage() {
                 <Button
                   size="lg"
                   variant="secondary"
-                  className="rounded-xl md:min-w-32"
+                  className="rounded-xl border border-border/60 bg-secondary/80 hover:bg-secondary md:min-w-32"
                   onClick={() => handleAction("withdraw")}
                   disabled={
                     !canSubmitWithdraw ||
@@ -412,7 +429,7 @@ export default function CurrentMonthPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-end gap-2 border-t border-border/50 pt-2">
+            <div className="flex flex-wrap justify-end gap-2 border-t border-border/60 pt-3">
               <Button
                 size="lg"
                 variant="outline"
@@ -436,19 +453,19 @@ export default function CurrentMonthPage() {
             </div>
 
             {errorMessage ? (
-              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-lg border border-destructive/20 bg-destructive/6 px-3 py-2.5 text-sm text-destructive/90 duration-200">
+              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive/90 duration-200">
                 {errorMessage}
               </p>
             ) : null}
 
             {successMessage ? (
-              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-lg border border-emerald-500/20 bg-emerald-500/6 px-3 py-2.5 text-sm text-emerald-700 duration-200 dark:text-emerald-300">
+              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-700 duration-200 dark:text-emerald-300">
                 {successMessage}
               </p>
             ) : null}
 
-            <div className="space-y-4 rounded-xl border border-border/50 bg-background/70 p-4">
-              <div className="space-y-2">
+            <div className="grid gap-4 rounded-2xl border border-border/60 bg-background/75 p-4 lg:grid-cols-3">
+              <div className="space-y-2 rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3">
                 <p className="text-sm font-semibold text-foreground">
                   Income entries ({currentMonthly.incomeItems?.length ?? 0})
                 </p>
@@ -458,7 +475,7 @@ export default function CurrentMonthPage() {
                     {currentMonthly.incomeItems.map((item) => (
                       <li
                         key={item.id}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/8 px-3 py-2"
+                        className="flex items-center justify-between gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2"
                       >
                         <span className="text-foreground">
                           {item.description}
@@ -486,7 +503,7 @@ export default function CurrentMonthPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 rounded-xl border border-rose-500/25 bg-rose-500/5 p-3">
                 <p className="text-sm font-semibold text-foreground">
                   Expense entries ({currentMonthly.expenseItems?.length ?? 0})
                 </p>
@@ -496,7 +513,7 @@ export default function CurrentMonthPage() {
                     {currentMonthly.expenseItems.map((item) => (
                       <li
                         key={item.id}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-rose-500/20 bg-rose-500/8 px-3 py-2"
+                        className="flex items-center justify-between gap-3 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2"
                       >
                         <span className="text-foreground">
                           {item.description}
@@ -524,7 +541,7 @@ export default function CurrentMonthPage() {
                 )}
               </div>
 
-              <div className="space-y-2 border-t border-border/50 pt-4">
+              <div className="space-y-2 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3">
                 <p className="text-sm font-semibold text-foreground">
                   Withdraw entries ({currentMonthly.withdrawItems?.length ?? 0})
                 </p>

@@ -589,19 +589,19 @@ export default function MonthlyFlowPage() {
     <DashboardAuthGate>
       <DashboardSection
         title="Monthly Flow"
-        description="Switch months quickly, review month totals, and edit one month ledger at a time."
+        description="Review any month, adjust totals, and maintain a clean ledger timeline with faster controls."
         actions={
-          <span className="rounded-lg border border-border/50 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            Monthly ledger mode
+          <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-primary">
+            Ledger mode
           </span>
         }
       >
-        <Card className="rounded-2xl border border-border/60 bg-card/95 shadow-sm">
+        <Card className="animate-rise-fade-delay-1 rounded-3xl border border-border/60 bg-card/90 shadow-sm">
           <CardContent className="space-y-5 p-4 md:p-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/30 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     {monthStatusText}
                   </span>
                   <span className="text-xs text-muted-foreground">
@@ -609,7 +609,7 @@ export default function MonthlyFlowPage() {
                     below.
                   </span>
                 </div>
-                <h2 className="flex items-center gap-2 text-[1.75rem] font-semibold tracking-tight text-foreground md:text-[2rem]">
+                <h2 className="flex items-center gap-2 text-[1.8rem] font-semibold tracking-tight text-foreground md:text-[2.2rem]">
                   <CalendarDays className="size-5 text-muted-foreground" />
                   {selectedMonthLabel}
                 </h2>
@@ -634,7 +634,7 @@ export default function MonthlyFlowPage() {
                     disabled={isSaving}
                   />
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-background/70 p-1">
+                <div className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-background/75 p-1">
                   <Button
                     size="icon-sm"
                     variant="outline"
@@ -663,7 +663,7 @@ export default function MonthlyFlowPage() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  className="h-9 rounded-lg px-3"
+                  className="h-9 rounded-xl border border-border/60 bg-secondary/80 px-3"
                   onClick={() => setSelectedMonthId(currentMonthId)}
                   disabled={isSaving || selectedMonthId === currentMonthId}
                 >
@@ -672,12 +672,12 @@ export default function MonthlyFlowPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-border/60 bg-background/70 p-3 md:p-4">
+            <div className="rounded-2xl border border-border/60 bg-background/75 p-3 md:p-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-foreground">
                   Jump inside {selectedYear}
                 </p>
-                <div className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
+                <div className="inline-flex items-center gap-1 rounded-xl border border-border/60 bg-muted/35 p-1">
                   <Button
                     size="icon-sm"
                     variant="ghost"
@@ -716,7 +716,7 @@ export default function MonthlyFlowPage() {
                       key={label}
                       size="sm"
                       variant={isActive ? "default" : "outline"}
-                      className={`h-9 rounded-lg px-2.5 text-sm transition-colors ${
+                      className={`h-9 rounded-xl px-2.5 text-sm transition-colors ${
                         isActive
                           ? "shadow-sm"
                           : "hover:border-primary/30 hover:bg-muted/60"
@@ -741,7 +741,7 @@ export default function MonthlyFlowPage() {
           </div>
         ) : null}
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="animate-rise-fade-delay-1 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <DashboardStatCard
             label="Income"
             value={currencyFormatter.format(selectedMonthly.income)}
@@ -761,9 +761,9 @@ export default function MonthlyFlowPage() {
           />
         </div>
 
-        <Card className="rounded-xl border border-border/50 bg-card shadow-sm">
+        <Card className="animate-rise-fade-delay-2 rounded-3xl border border-border/60 bg-card/90 shadow-sm">
           <CardContent className="space-y-5 p-5 md:p-6">
-            <div className="space-y-4 rounded-xl border border-border/60 bg-background/70 p-5 md:p-6">
+            <div className="space-y-4 rounded-2xl border border-border/60 bg-background/75 p-5 md:p-6">
               <p className="text-base font-semibold text-foreground">
                 Manual month adjustments
               </p>
@@ -864,10 +864,10 @@ export default function MonthlyFlowPage() {
                   />
                 </div>
               </div>
-              <div className="flex justify-end border-t border-border/50 pt-2">
+              <div className="flex justify-end border-t border-border/60 pt-3">
                 <Button
                   size="lg"
-                  className="h-10 rounded-lg px-5"
+                  className="h-10 rounded-xl px-5"
                   onClick={handleSave}
                   disabled={isSaving || !isFormValid}
                 >
@@ -877,7 +877,7 @@ export default function MonthlyFlowPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+              <div className="space-y-3 rounded-2xl border border-border/60 bg-background/75 p-4">
                 <p className="text-sm font-semibold text-foreground">
                   Add income entry
                 </p>
@@ -912,7 +912,7 @@ export default function MonthlyFlowPage() {
                 </div>
               </div>
 
-              <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+              <div className="space-y-3 rounded-2xl border border-border/60 bg-background/75 p-4">
                 <p className="text-sm font-semibold text-foreground">
                   Add expense entry
                 </p>
@@ -949,7 +949,7 @@ export default function MonthlyFlowPage() {
                 </div>
               </div>
 
-              <div className="space-y-3 rounded-xl border border-border/50 bg-background/70 p-4">
+              <div className="space-y-3 rounded-2xl border border-border/60 bg-background/75 p-4">
                 <p className="text-sm font-semibold text-foreground">
                   Add withdraw entry
                 </p>
@@ -987,7 +987,7 @@ export default function MonthlyFlowPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-end gap-2 border-t border-border/50 pt-2">
+            <div className="flex flex-wrap justify-end gap-2 border-t border-border/60 pt-3">
               <Button
                 size="lg"
                 variant="outline"
@@ -1000,129 +1000,132 @@ export default function MonthlyFlowPage() {
             </div>
 
             {errorMessage ? (
-              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-lg border border-destructive/20 bg-destructive/6 px-3 py-2.5 text-sm text-destructive/90 duration-200">
+              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive/90 duration-200">
                 {errorMessage}
               </p>
             ) : null}
 
             {successMessage ? (
-              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-lg border border-emerald-500/20 bg-emerald-500/6 px-3 py-2.5 text-sm text-emerald-700 duration-200 dark:text-emerald-300">
+              <p className="animate-in fade-in-0 slide-in-from-bottom-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-700 duration-200 dark:text-emerald-300">
                 {successMessage}
               </p>
             ) : null}
 
-            <div className="space-y-2 rounded-xl border border-border/50 bg-background/70 p-4">
-              <p className="text-sm font-semibold text-foreground">
-                Income entries ({selectedMonthly.incomeItems?.length ?? 0})
-              </p>
-              {selectedMonthly.incomeItems &&
-              selectedMonthly.incomeItems.length > 0 ? (
-                <ul className="space-y-1.5 text-sm">
-                  {selectedMonthly.incomeItems.map((item) => (
-                    <li
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/8 px-3 py-2"
-                    >
-                      <span className="text-foreground">
-                        {item.description}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground">
-                          {currencyFormatter.format(item.amount)}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRemoveIncomeEntry(item.id)}
-                          disabled={isSaving}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No income entries in this month yet.
+            <div className="grid gap-4 lg:grid-cols-3">
+              <div className="space-y-2 rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4">
+                <p className="text-sm font-semibold text-foreground">
+                  Income entries ({selectedMonthly.incomeItems?.length ?? 0})
                 </p>
-              )}
-            </div>
+                {selectedMonthly.incomeItems &&
+                selectedMonthly.incomeItems.length > 0 ? (
+                  <ul className="space-y-1.5 text-sm">
+                    {selectedMonthly.incomeItems.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2"
+                      >
+                        <span className="text-foreground">
+                          {item.description}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">
+                            {currencyFormatter.format(item.amount)}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRemoveIncomeEntry(item.id)}
+                            disabled={isSaving}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No income entries in this month yet.
+                  </p>
+                )}
+              </div>
 
-            <div className="space-y-2 rounded-xl border border-border/50 bg-background/70 p-4">
-              <p className="text-sm font-semibold text-foreground">
-                Expense entries ({selectedMonthly.expenseItems?.length ?? 0})
-              </p>
-              {selectedMonthly.expenseItems &&
-              selectedMonthly.expenseItems.length > 0 ? (
-                <ul className="space-y-1.5 text-sm">
-                  {selectedMonthly.expenseItems.map((item) => (
-                    <li
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-rose-500/20 bg-rose-500/8 px-3 py-2"
-                    >
-                      <span className="text-foreground">
-                        {item.description}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground">
-                          {currencyFormatter.format(item.amount)}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRemoveExpenseEntry(item.id)}
-                          disabled={isSaving}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No expense entries in this month yet.
+              <div className="space-y-2 rounded-xl border border-rose-500/25 bg-rose-500/5 p-4">
+                <p className="text-sm font-semibold text-foreground">
+                  Expense entries ({selectedMonthly.expenseItems?.length ?? 0})
                 </p>
-              )}
-            </div>
+                {selectedMonthly.expenseItems &&
+                selectedMonthly.expenseItems.length > 0 ? (
+                  <ul className="space-y-1.5 text-sm">
+                    {selectedMonthly.expenseItems.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2"
+                      >
+                        <span className="text-foreground">
+                          {item.description}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">
+                            {currencyFormatter.format(item.amount)}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRemoveExpenseEntry(item.id)}
+                            disabled={isSaving}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No expense entries in this month yet.
+                  </p>
+                )}
+              </div>
 
-            <div className="space-y-2 rounded-xl border border-border/50 bg-background/70 p-4">
-              <p className="text-sm font-semibold text-foreground">
-                Withdraw entries ({selectedMonthly.withdrawItems?.length ?? 0})
-              </p>
-              {selectedMonthly.withdrawItems &&
-              selectedMonthly.withdrawItems.length > 0 ? (
-                <ul className="space-y-1.5 text-sm">
-                  {selectedMonthly.withdrawItems.map((item) => (
-                    <li
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2"
-                    >
-                      <span className="text-foreground">
-                        {item.description}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground">
-                          {currencyFormatter.format(item.amount)}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRemoveWithdrawEntry(item.id)}
-                          disabled={isSaving}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No withdraw entries in this month yet.
+              <div className="space-y-2 rounded-xl border border-amber-500/25 bg-amber-500/5 p-4">
+                <p className="text-sm font-semibold text-foreground">
+                  Withdraw entries ({selectedMonthly.withdrawItems?.length ?? 0}
+                  )
                 </p>
-              )}
+                {selectedMonthly.withdrawItems &&
+                selectedMonthly.withdrawItems.length > 0 ? (
+                  <ul className="space-y-1.5 text-sm">
+                    {selectedMonthly.withdrawItems.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2"
+                      >
+                        <span className="text-foreground">
+                          {item.description}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">
+                            {currencyFormatter.format(item.amount)}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRemoveWithdrawEntry(item.id)}
+                            disabled={isSaving}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No withdraw entries in this month yet.
+                  </p>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
