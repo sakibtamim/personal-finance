@@ -281,7 +281,7 @@ export default function CurrentMonthPage() {
         description="Control day-to-day cashflow with quick actions and instant visibility into your working month."
         actions={
           <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/35 bg-cyan-500/12 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.13em] text-cyan-700 dark:text-cyan-300">
-            <CalendarCheck2 className="size-3.5" />
+            <CalendarCheck2 className="size-3.5" aria-hidden="true" />
             Live month workspace
           </span>
         }

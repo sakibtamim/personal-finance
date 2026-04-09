@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType, SVGProps } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,7 @@ type DashboardStatCardProps = {
   className?: string;
   valueClassName?: string;
   tone?: keyof typeof toneStyles;
-  icon?: ComponentType<{ className?: string }>;
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
 };
 
 export function DashboardStatCard({
@@ -83,7 +83,7 @@ export function DashboardStatCard({
                 palette.iconWrap,
               )}
             >
-              <Icon className="size-3.5" />
+              <Icon className="size-3.5" aria-hidden="true" focusable="false" />
             </span>
           ) : null}
         </div>

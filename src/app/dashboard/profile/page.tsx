@@ -46,7 +46,8 @@ export default function ProfilePage() {
   ];
   const displayName = user?.displayName?.trim() || "User";
   const initials = displayName
-    .split(" ")
+    .split(/\s+/)
+    .filter(Boolean)
     .map((part) => part[0])
     .slice(0, 2)
     .join("")

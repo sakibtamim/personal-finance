@@ -618,7 +618,10 @@ export default function MonthlyFlowPage() {
                   </span>
                 </div>
                 <h2 className="flex items-center gap-2 text-[1.8rem] font-semibold tracking-tight text-foreground md:text-[2.2rem]">
-                  <CalendarDays className="size-5 text-muted-foreground" />
+                  <CalendarDays
+                    className="size-5 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                   {selectedMonthLabel}
                 </h2>
               </div>

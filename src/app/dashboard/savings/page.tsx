@@ -87,15 +87,19 @@ export default function SavingsPage() {
 
   const hasNoRows = monthRows.length === 0;
   const hasNoFilteredRows = !hasNoRows && filteredMonthRows.length === 0;
-  const filteredSavedTotal = filteredMonthRows.reduce(
-    (total, row) => total + row.saved,
-    0,
+  const { filteredSavedTotal, filteredWithdrawnTotal, filteredNet } = useMemo(
+    () =>
+      filteredMonthRows.reduce(
+        (acc, row) => {
+          acc.filteredSavedTotal += row.saved;
+          acc.filteredWithdrawnTotal += row.withdrawn;
+          acc.filteredNet += row.net;
+          return acc;
+        },
+        { filteredSavedTotal: 0, filteredWithdrawnTotal: 0, filteredNet: 0 },
+      ),
+    [filteredMonthRows],
   );
-  const filteredWithdrawnTotal = filteredMonthRows.reduce(
-    (total, row) => total + row.withdrawn,
-    0,
-  );
-  const filteredNet = filteredSavedTotal - filteredWithdrawnTotal;
 
   return (
     <DashboardAuthGate>
@@ -136,7 +140,7 @@ export default function SavingsPage() {
         <div className="grid gap-3 rounded-2xl border border-emerald-500/25 bg-linear-to-br from-emerald-500/10 to-teal-500/8 p-3 sm:grid-cols-3">
           <div className="rounded-xl border border-emerald-500/25 bg-linear-to-br from-emerald-500/12 to-card/80 p-3">
             <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              <Landmark className="size-3.5" />
+              <Landmark className="size-3.5" aria-hidden="true" />
               Activity months
             </p>
             <p className="mt-1 text-xl font-semibold">
@@ -145,7 +149,7 @@ export default function SavingsPage() {
           </div>
           <div className="rounded-xl border border-cyan-500/25 bg-linear-to-br from-cyan-500/10 to-card/80 p-3">
             <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              <ArrowUpRight className="size-3.5" />
+              <ArrowUpRight className="size-3.5" aria-hidden="true" />
               Saved volume
             </p>
             <p className="mt-1 text-xl font-semibold">
@@ -154,7 +158,7 @@ export default function SavingsPage() {
           </div>
           <div className="rounded-xl border border-amber-500/25 bg-linear-to-br from-amber-500/10 to-card/80 p-3">
             <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              <ArrowDownLeft className="size-3.5" />
+              <ArrowDownLeft className="size-3.5" aria-hidden="true" />
               Net movement
             </p>
             <p className="mt-1 text-xl font-semibold">
