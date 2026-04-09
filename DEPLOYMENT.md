@@ -42,6 +42,19 @@ Add these variables in your Vercel project settings for Production and Preview:
 - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 - NEXT_PUBLIC_FIREBASE_APP_ID
 
+## Firestore index workflow
+
+- Keep [firestore.indexes.json](firestore.indexes.json) in source control. This file is the index blueprint for all environments.
+- If Firestore query fails with an index error, open the "Create index" link from the error and create it in Firebase Console.
+- After index creation, sync the latest indexes into [firestore.indexes.json](firestore.indexes.json) and commit the file.
+- Deploy indexes with:
+
+```bash
+pnpm firestore:deploy
+```
+
+- If [firestore.indexes.json](firestore.indexes.json) is empty, your app currently uses default single-field indexes only.
+
 ## 4. Deploy to Vercel
 
 ```bash
