@@ -291,7 +291,6 @@ export default function CurrentMonthPage() {
             label="Active month"
             value={currentMonthId}
             hint="Your primary month for daily transactions"
-            className="sm:col-span-2"
             icon={CalendarCheck2}
             tone="indigo"
           />

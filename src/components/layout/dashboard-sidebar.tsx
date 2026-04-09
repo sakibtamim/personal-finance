@@ -74,7 +74,11 @@ export function DashboardSidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-border/60 bg-card/88 px-4 py-6 backdrop-blur md:block">
       <div className="flex h-full flex-col">
-        <div className="flex items-center gap-2.5 px-2">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2.5 rounded-xl px-2 py-1"
+          aria-label="Go to dashboard"
+        >
           <span className="relative inline-flex size-9 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm">
             <Image
               src="/logo.png"
@@ -88,7 +92,7 @@ export function DashboardSidebar() {
           <span className="text-sm font-semibold tracking-wide text-foreground">
             Finance Hub
           </span>
-        </div>
+        </Link>
 
         <nav
           className="mt-8 flex flex-1 flex-col gap-2"
