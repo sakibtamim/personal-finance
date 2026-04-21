@@ -15,12 +15,12 @@ export type DashboardNavItem = {
 
 export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   {
-    label: "Current Month",
+    label: "Current-Month",
     href: "/dashboard/current-month",
     icon: CircleDollarSign,
   },
   {
-    label: "Monthly Flow",
+    label: "Monthly-Flow",
     href: "/dashboard/monthly-flow",
     icon: CalendarRange,
   },
