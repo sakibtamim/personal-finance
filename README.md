@@ -21,7 +21,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 Create a local env file from the example and fill in your Firebase project keys:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
 Required variables are listed in `.env.example`.
@@ -160,11 +160,11 @@ pnpm test:coverage
 
 ## Deployment (Step 12)
 
-Production deployment workflow is now documented and scripted:
+Deployment guidance is documented and the repository is being aligned to a minimal self-hosted GitHub Actions flow:
 
 - Pre-deploy verification script (`lint + tests + build`)
 - Firestore rules deployment scripts
-- Vercel production deployment script
+- Planned self-hosted GitHub Actions deployment flow
 - Post-deploy smoke-test checklist
 
 Key files:
@@ -177,8 +177,19 @@ Main commands:
 ```bash
 pnpm predeploy:check
 pnpm firestore:deploy
-pnpm deploy:vercel
 ```
+
+Planned deployment model:
+
+- Build on GitHub Actions from the `deploy` branch
+- Ship a standalone Next.js artifact to a server over SSH
+- Restart the app with PM2
+- Keep Firebase rules deployment separate from the app deployment path in the first phase
+
+Documentation:
+
+- `DEPLOYMENT.md` for the operational deployment guide
+- `DEPLOYMENT_IMPLEMENTATION_PLAN.md` for the dedicated implementation plan
 
 ## Dashboard UI System (Step 14+)
 
@@ -198,7 +209,7 @@ Recommended flow before UI updates:
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Geist.
 
 ## Learn More
 
@@ -208,9 +219,3 @@ To learn more about Next.js, take a look at the following resources:
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

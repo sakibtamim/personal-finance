@@ -1,8 +1,12 @@
 # Deployment Guide
 
-## 1. Pre-deployment checks
+This repository no longer uses a Vercel deployment path.
 
-Run these commands locally:
+This file is the operational deployment guide. The dedicated implementation plan for the new self-hosted GitHub Actions deployment flow lives in [DEPLOYMENT_IMPLEMENTATION_PLAN.md](C:/PU/personal-finance/DEPLOYMENT_IMPLEMENTATION_PLAN.md:1).
+
+## 1. Current pre-deployment checks
+
+Run these commands locally before shipping any commit:
 
 ```bash
 pnpm install
@@ -15,9 +19,9 @@ This runs:
 - tests
 - production build
 
-## 2. Firebase rules deployment
+## 2. Current Firebase rules deployment
 
-Make sure Firestore rules and indexes are deployed:
+Firestore rules and indexes are still deployed manually:
 
 ```bash
 pnpm firebase:login
@@ -31,9 +35,9 @@ If browser callback login fails, run:
 pnpm dlx firebase-tools login --no-localhost --reauth
 ```
 
-## 3. Vercel environment variables
+## 3. Runtime environment contract
 
-Add these variables in your Vercel project settings for Production and Preview:
+The app currently depends on these Firebase public variables:
 
 - NEXT_PUBLIC_FIREBASE_API_KEY
 - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
@@ -42,7 +46,12 @@ Add these variables in your Vercel project settings for Production and Preview:
 - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 - NEXT_PUBLIC_FIREBASE_APP_ID
 
-## Firestore index workflow
+These values must exist in two places for the future GitHub Actions deployment flow:
+
+- build-time GitHub Actions secrets, because `pnpm build` reads them
+- runtime server `.env`, because the self-hosted app process must expose the same values
+
+## 4. Firestore index workflow
 
 - Keep [firestore.indexes.json](firestore.indexes.json) in source control. This file is the index blueprint for all environments.
 - If Firestore query fails with an index error, open the "Create index" link from the error and create it in Firebase Console.
@@ -53,17 +62,22 @@ Add these variables in your Vercel project settings for Production and Preview:
 pnpm firestore:deploy
 ```
 
-- If [firestore.indexes.json](firestore.indexes.json) is empty, your app currently uses default single-field indexes only.
+- If [firestore.indexes.json](firestore.indexes.json) is empty, the app currently uses default single-field indexes only.
 
-## 4. Deploy to Vercel
+## 5. Planned self-hosted app deployment
 
-```bash
-pnpm deploy:vercel
-```
+The future deployment target is a minimal self-hosted GitHub Actions workflow built around:
 
-## 5. Production smoke test
+- a `deploy` branch trigger
+- build artifact creation on GitHub Actions
+- SSH upload to the server
+- PM2-managed runtime restart
 
-After deployment, validate:
+The first phase focuses on getting the core app deploy working. Firestore automation, rollback automation, monitoring, and multi-environment promotion are planned follow-up tracks and are documented in [DEPLOYMENT_IMPLEMENTATION_PLAN.md](C:/PU/personal-finance/DEPLOYMENT_IMPLEMENTATION_PLAN.md:1).
+
+## 6. Post-deploy smoke test
+
+After the self-hosted deployment is live, validate:
 
 - Sign up, sign in, sign out
 - Password reset email flow
@@ -72,9 +86,10 @@ After deployment, validate:
 - Currency and theme persistence
 - Data isolation across users
 
-## 6. Recommended post-launch hardening
+## 7. Recommended hardening after the workflow exists
 
 - Replace Firestore test mode with stricter non-development settings if still enabled.
-- Restrict Firebase Auth authorized domains to your real app domains.
+- Restrict Firebase Auth authorized domains to the real app domains.
 - Enable App Check for stronger abuse protection.
-- Set up monitoring and alerts in Firebase and your hosting provider.
+- Add GitHub environment protections for the deployment job.
+- Add monitoring and alerts in Firebase and on the hosting server.
