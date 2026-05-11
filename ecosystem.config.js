@@ -1,4 +1,4 @@
-/** @type {import('pm2').StartOptions[]} */
+/** @type {{ apps: import('pm2').StartOptions[] }} */
 module.exports = {
   apps: [
     {
