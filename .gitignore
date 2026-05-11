@@ -40,7 +40,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # deployment
-.vercel/
+deploy.tar.gz
 
 # Firebase local/emulator artifacts
 firebase-debug.log
