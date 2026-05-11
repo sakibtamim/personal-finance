@@ -93,6 +93,8 @@ The app is deployed via GitHub Actions when changes are pushed to the `deploy` b
 
 ### Branch promotion flow
 
+The `deploy` branch exists on the remote and triggers the workflow on push.
+
 To deploy the latest `develop` to production:
 
 ```bash
@@ -101,6 +103,8 @@ git checkout deploy
 git merge --ff-only origin/develop
 git push origin deploy
 ```
+
+> **Note:** Always use `--ff-only` to keep the `deploy` branch history clean and linear. If the merge fails, investigate why `deploy` has diverged from `develop` before forcing anything.
 
 This keeps deployment explicit — not every `develop` push ships automatically.
 

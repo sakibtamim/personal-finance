@@ -299,7 +299,9 @@ The target server should already have:
 
 ## Branch Promotion Workflow
 
-Suggested release flow:
+The `deploy` branch is created and tracked on the remote. Pushing to it triggers the GitHub Actions deployment workflow.
+
+Release flow:
 
 ```bash
 git fetch origin
@@ -307,6 +309,8 @@ git checkout deploy
 git merge --ff-only origin/develop
 git push origin deploy
 ```
+
+Always use `--ff-only` to keep the `deploy` branch history clean and linear.
 
 That keeps deployment explicit and avoids shipping every `develop` push automatically.
 
