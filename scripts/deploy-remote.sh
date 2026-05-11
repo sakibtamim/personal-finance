@@ -82,6 +82,13 @@ if [ -n "${ENV_BACKUP}" ] && [ -f "${ENV_BACKUP}" ]; then
   ENV_BACKUP=""
 fi
 
+# --- Ensure PM2 is installed ---
+
+if ! command -v pm2 &> /dev/null; then
+  echo "==> PM2 not found, installing globally..."
+  npm install -g pm2
+fi
+
 # --- Restart PM2 ---
 
 echo "==> Restarting PM2 process"
