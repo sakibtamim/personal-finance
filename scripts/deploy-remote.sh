@@ -7,6 +7,14 @@
 
 set -euo pipefail
 
+# Source shell profile so node/npm/pm2 are in PATH for non-interactive SSH
+for profile in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile" "$HOME/.nvm/nvm.sh"; do
+  if [ -f "$profile" ]; then
+    # shellcheck disable=SC1090
+    source "$profile" 2>/dev/null || true
+  fi
+done
+
 # --- Validate TARGET ---
 
 if [ -z "${TARGET:-}" ]; then
