@@ -113,7 +113,7 @@ This keeps deployment explicit — not every `develop` push ships automatically.
 The target server must have:
 
 - Node.js 20.9+ or 22+
-- PM2 installed globally for the deploy user
+- PM2 installed globally for the deploy user (`npm install -g pm2`)
 - A reverse proxy (e.g., nginx) forwarding to port 2304
 - A deployment directory matching `SSH_TARGET`
 - A reachable public domain pointing to the reverse proxy
