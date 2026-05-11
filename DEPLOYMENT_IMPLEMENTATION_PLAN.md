@@ -30,14 +30,14 @@ The first implementation target is the core app deployment path only. The follow
 
 ## Current State
 
-The repository currently has:
+The repository now has:
 
 - local pre-deploy verification via `pnpm predeploy:check`
 - manual Firestore rules and indexes deployment via `pnpm firestore:deploy`
-- no GitHub Actions deployment workflow
-- no PM2 config
-- no remote deploy script
-- no self-hosting artifact packaging
+- GitHub Actions deployment workflow (`.github/workflows/deploy.yml`)
+- PM2 runtime config (`ecosystem.config.js`)
+- remote deploy script (`scripts/deploy-remote.sh`)
+- Next.js standalone output (`output: "standalone"` in `next.config.ts`)
 
 ## Target Architecture
 
@@ -314,10 +314,10 @@ That keeps deployment explicit and avoids shipping every `develop` push automati
 
 Recommended sequence:
 
-1. Update `next.config.ts` for standalone output.
-2. Add `ecosystem.config.js`.
-3. Add `scripts/deploy-remote.sh`.
-4. Add `.github/workflows/deploy.yml`.
+1. ~~Update `next.config.ts` for standalone output.~~ ✅
+2. ~~Add `ecosystem.config.js`.~~ ✅
+3. ~~Add `scripts/deploy-remote.sh`.~~ ✅
+4. ~~Add `.github/workflows/deploy.yml`.~~ ✅
 5. Configure GitHub secrets.
 6. Prepare the server.
 7. Test a first deploy from `deploy`.
