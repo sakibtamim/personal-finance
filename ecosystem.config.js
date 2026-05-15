@@ -9,7 +9,7 @@ module.exports = {
       watch: false,
       env: {
         NODE_ENV: "production",
-        PORT: 2304,
+        PORT: 7931,
         HOSTNAME: "0.0.0.0",
       },
     },
